@@ -1,4 +1,7 @@
+import json
+
 import bottle
+import os
 from detector_integration_api.rest_api.rest_server import register_rest_interface
 from detector_integration_api.tests.utils import MockBackendClient, MockDetectorClient, MockCppWriterClient, \
     MockMflowNodesClient
@@ -29,3 +32,12 @@ def start_test_bsread_integration_server(host, port, manager_module):
     register_rest_interface(app=app, integration_manager=integration_manager)
 
     bottle.run(app=app, host=host, port=port)
+
+
+def get_valid_config():
+
+    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), "sf_config.json")
+    with open(filename) as input_file:
+        configuration = json.load(input_file)
+
+    return configuration
