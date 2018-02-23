@@ -4,7 +4,7 @@ from logging import getLogger
 from detector_integration_api.utils import ClientDisableWrapper, check_for_target_status
 
 from sf_dia.validation import IntegrationStatus, validate_writer_config, validate_backend_config, \
-    validate_detector_config, validate_bsread_config, validate_configs_dependencies
+    validate_detector_config, validate_bsread_config, validate_configs_dependencies, interpret_status
 
 _logger = getLogger(__name__)
 _audit_logger = getLogger("audit_trail")
@@ -70,7 +70,7 @@ class IntegrationManager(object):
         return self.reset()
 
     def get_acquisition_status(self):
-        status = self.interpret_status(self.get_status_details())
+        status = interpret_status(self.get_status_details())
 
         # There is no way of knowing if the detector is configured as the user desired.
         # We have a flag to check if the user config was passed on to the detector.
@@ -86,7 +86,7 @@ class IntegrationManager(object):
         _audit_logger.info("Getting status details.")
 
         _audit_logger.info("writer_client.get_status()")
-        writer_status = self.writer_client.get_status()["is_running"] \
+        writer_status = self.writer_client.get_status() \
             if self.writer_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
 
         _audit_logger.info("backend_client.get_status()")
