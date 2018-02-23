@@ -14,7 +14,7 @@ requirements:
 
     run:
         - python
-        - detector_integration_api >=1.0.2
+        - detector_integration_api >=1.0.3
 
 build:
   entry_points:
