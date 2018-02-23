@@ -16,7 +16,8 @@ _logger = logging.getLogger(__name__)
 
 def start_integration_server(host, port,
                              backend_api_url, backend_stream_url, writer_port,
-                             bsread_url, bsread_instance_name, disable_bsread):
+                             bsread_url, bsread_instance_name, disable_bsread,
+                             timing_pv, timing_start_code, timing_stop_code):
 
     _logger.info("Starting integration REST API with:\nBackend url: %s\nBackend stream: "
                  "%s\nWriter port: %s\nbsread url: %s\n",
@@ -25,7 +26,7 @@ def start_integration_server(host, port,
     backend_client = BackendClient(backend_api_url)
     writer_client = CppWriterClient(backend_stream_url, writer_port)
     bsread_client = NodeClient(bsread_url, bsread_instance_name)
-    detector_client = DetectorTimingClient()
+    detector_client = DetectorTimingClient(timing_pv, timing_start_code, timing_stop_code)
 
     integration_manager = manager.IntegrationManager(writer_client=writer_client,
                                                      backend_client=backend_client,
@@ -69,6 +70,13 @@ def main():
     parser.add_argument("--disable_bsread", action='store_true',
                         help="Disable the bsread writer at startup.")
 
+    parser.add_argument("--timing_pv", default="SAR-CVME-TIFALL4-EVG0:SoftEvt-EvtCode-SP",
+                        help="PV for triggering soft events on the timing.")
+    parser.add_argument("--timing_start_code", default=254,
+                        help="Timing event code to start the detector.")
+    parser.add_argument("--timing_stop_code", default=255,
+                        help="Timing event code to stop the detector.")
+
     arguments = parser.parse_args()
 
     # Setup the logging level.
@@ -76,7 +84,8 @@ def main():
 
     start_integration_server(arguments.interface, arguments.port,
                              arguments.backend_url, arguments.backend_stream, arguments.writer_port,
-                             arguments.bsread_url, arguments.bsread_instance_name, arguments.disable_bsread)
+                             arguments.bsread_url, arguments.bsread_instance_name, arguments.disable_bsread,
+                             arguments.timing_pv, arguments.timing_start_code, arguments.timing_stop_code)
 
 
 if __name__ == "__main__":
