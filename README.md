@@ -1,19 +1,19 @@
-[![Build Status](https://travis-ci.org/paulscherrerinstitute/csaxs_dia.svg?branch=master)](https://travis-ci.org/paulscherrerinstitute/csaxs_dia)
+[![Build Status](https://travis-ci.org/paulscherrerinstitute/sf_dia.svg?branch=master)](https://travis-ci.org/paulscherrerinstitute/sf_dia)
 
-# cSAXS Eiger 9M detector integration
+# SwissFEL Jungfrau detector integration
 
-The following README is useful for controlling the Eiger 9M deployment at cSAXS.
+The following README is useful for controlling the Jungfrau deployment at SF.
 
 The detector integration is made up from the following components:
 
-- Detector integration API (running on xbl-daq-27)
+- Detector integration API (running on sf-daq-1)
     - https://github.com/datastreaming/detector_integration_api
-- Detector client (running on xbl-daq-27)
+- Detector client (running on sf-daq-1)
     - https://github.com/slsdetectorgroup/slsDetectorPackage
-- Backend server (running on xbl-daq-28)
+- Backend server (running on sf-daq-1)
     - https://git.psi.ch/HPDI/dafl-eiger
-- Writer process (running on xbl-daq-27)
-    - https://github.com/paulscherrerinstitute/csaxs_cpp_h5_writer
+- Writer process (running on sf-daq-1)
+    - https://github.com/paulscherrerinstitute/sf_cpp_h5_writer
     
 # Table of content
 1. [Quick introduction](#quick)
@@ -24,13 +24,15 @@ The detector integration is made up from the following components:
     1. [Detector configuration](#dia_configuration_parameters_detector)
     2. [Backend configuration](#dia_configuration_parameters_backend)
     3. [Writer configuration](#dia_configuration_parameters_writer)
-4. [xbl-daq-28 (Backend server)](#deployment_info_28)
-5. [xbl-daq-27 (DIA and writer server)](#deployment_info_27)
+4. [sf-daq-1 (DIA, backend, writer, bsread server)](#deployment_info_daq_1)
 
 <a id="quick"></a>
 ## Quick introduction
 
-**DIA Address:** http://xbl-daq-27:10000
+**DIA Address 1:** http://sf-daq-1:10000 
+**DIA Address 2:** http://sf-daq-2:10000 
+
+All the examples in this document will be given using **DIA Address 1**.
 
 To get a feeling on how to use the DIA, you can use the following example to start and write a test file.
 
@@ -38,7 +40,7 @@ You can control the DIA via the Python client or over the REST api directly.
 
 **More documentation about the DIA can be found on its repository** (referenced above).
 
-**Note**: The writer needs a lot of parameters to write the MX file format. You probably do not care about this, so you 
+**Note**: The writer needs additional parameters to write the SF file format. You probably do not care about this, so you 
 can use the DEBUG_FORMAT_PARAMETERS parameters for now.
 
 <a id="quick_python"></a>
@@ -56,26 +58,14 @@ conda install -c paulscherrerinstitute detector_integration_api
 ```python
 # Just some mock value for the file format.
 DEBUG_FORMAT_PARAMETERS = {
-    "sl2wv": 1.0, "sl0ch": 1.0, "sl2wh": 1.0, "temp_mono_cryst_1": 1.0, "harmonic": 1,
-    "mokev": 1.0, "sl2cv": 1.0, "bpm4_gain_setting": 1.0, "mirror_coating": "placeholder text",
-    "samx": 1.0, "sample_name": "placeholder text", "bpm5y": 1.0, "sl2ch": 1.0, "curr": 1.0,
-    "bs2_status": "placeholder text", "bs2y": 1.0, "diode": 1.0, "samy": 1.0, "sl4ch": 1.0,
-    "sl4wh": 1.0, "temp_mono_cryst_2": 1.0, "sl3wh": 1.0, "mith": 1.0, "bs1_status": "placeholder text",
-    "bpm4s": 1.0, "sl0wh": 1.0, "bpm6z": 1.0, "bs1y": 1.0, "scan": "placeholder text", "bpm5_gain_setting": 1.0,
-    "bpm4z": 1.0, "bpm4x": 1.0, "date": "placeholder text", "mibd": 1.0, "temp": 1.0,
-    "idgap": 1.0, "sl4cv": 1.0, "sl1wv": 1.0, "sl3wv": 1.0, "sl1ch": 1.0, "bs2x": 1.0, "bpm6_gain_setting": 1.0,
-    "bpm4y": 1.0, "bpm6s": 1.0, "sample_description": "placeholder text", "bpm5z": 1.0, "moth1": 1.0,
-    "sec": 1.0, "sl3cv": 1.0, "bs1x": 1.0, "bpm6_saturation_value": 1.0, "bpm5s": 1.0, "mobd": 1.0,
-    "sl1wh": 1.0, "sl4wv": 1.0, "bs2_det_dist": 1.0, "bpm5_saturation_value": 1.0,
-    "fil_comb_description": "placeholder text", "bpm5x": 1.0, "bpm4_saturation_value": 1.0, "bs1_det_dist": 1.0,
-    "sl3ch": 1.0, "bpm6y": 1.0, "sl1cv": 1.0, "bpm6x": 1.0, "ftrans": 1.0, "samz": 1.0
+   
 }
 
 # Import the client.
 from detector_integration_api import DetectorIntegrationClient
 
 # Connect to the Eiger 9M DIA.
-client = DetectorIntegrationClient("http://xbl-daq-27:10000")
+client = DetectorIntegrationClient("http://sf-daq-1:10000")
 
 # Make sure the status of the DIA is initialized.
 client.reset()
@@ -89,12 +79,15 @@ backend_config = {"bit_depth": 16, "n_frames": 1000}
 # Acquire 1000, 16 bit images with a period of 0.02.
 detector_config = {"dr": 16, "frames": 1000, "period": 0.02, "exptime": 0.0001}
 
+bsread_config = {}
+
 # Add format parameters to writer. In this case, we use the debugging one.
 writer_config.update(DEBUG_FORMAT_PARAMETERS)
 
 configuration = {"writer": writer_config,
                  "backend": backend_config,
-                 "detector": detector_config}
+                 "detector": detector_config,
+                 "bsread": bsread_config}
 
 # Set the configs.
 client.set_config(configuration)
@@ -126,21 +119,27 @@ Responses from the server are always JSONs. The "state" attribute in the JSON re
 important right now:
 
 - n_frames (10 in this example)
-- output_file (/sls/X12SA/Data10/gac-x12saop/tmp/dia_test.h5 in this example)
-- user_id (11057: gac-x12saop in this example)
+- output_file (/sf/bernina/data/raw/p16582/dia_test.h5 in this example)
+- user_id (16582: p16582 in this example)
 
 **Tip**: You can get a user id by running:
 ```bash
-# Get the id for user gac-x12saop
-id -u gac-x12saop
+# Get the id for user p16582
+id -u p16582
 ```
+
+**Note 2** Most of the bsread writer parameters in the config calls are set in a list and are static. Only the first 2 
+are important right now:
+
+- output_file (/sf/bernina/data/raw/p16582/bsread_test.h5 in this example)
+- user_id (16582: p16582 in this example)
 
 ```bash
 # Make sure the status of the DIA is initialized.
-curl -X POST http://xbl-daq-27:10000/api/v1/reset
+curl -X POST http://sf-daq-1:10000/api/v1/reset
 
 # Write 1000 frames, as user id 11057 (gac-x12saop), to file "/sls/X12SA/Data10/gac-x12saop/tmp/dia_test.h5".
-curl -X PUT http://xbl-daq-27:10000/api/v1/config -H "Content-Type: application/json" -d '
+curl -X PUT http://sf-daq-1:10000/api/v1/config -H "Content-Type: application/json" -d '
 {"backend": {"bit_depth": 16, "n_frames": 10},
  "detector": {"dr": 16, "exptime": 1, "frames": 10, "period": 0.1, "exptime": 0.001},
  "writer": {
@@ -219,14 +218,14 @@ curl -X PUT http://xbl-daq-27:10000/api/v1/config -H "Content-Type: application/
 }'
 
 # Start the acquisition.
-curl -X POST http://xbl-daq-27:10000/api/v1/start
+curl -X POST http://sf-daq-1:10000/api/v1/start
 
 # Get integration status.
-curl -X GET http://xbl-daq-27:10000/api/v1/status
+curl -X GET http://sf-daq-1:10000/api/v1/status
 
 # Stop the acquisition. This should be called only in case of emergency:
 #   by default it should stop then the selected number of images is collected.
-curl -X POST http://xbl-daq-27:10000/api/v1/stop
+curl -X POST http://sf-daq-1:10000/api/v1/stop
 ```
 
 <a id="state_machine"></a>
@@ -258,6 +257,9 @@ Methods that do not modify the state machine are not described in this table, as
 | IntegrationStatus.DETECTOR_STOPPED | Waiting for backend and writer to finish. |||
 | | | stop | IntegrationStatus.INITIALIZED |
 | | | reset | IntegrationStatus.INITIALIZED |
+| IntegrationStatus.BSREAD_STILL_RUNNING | Waiting for bsread writer to finish. |||
+| | | stop | IntegrationStatus.INITIALIZED |
+| | | reset | IntegrationStatus.INITIALIZED |
 | IntegrationStatus.FINISHED | Acquisition completed. |||
 | | | reset | IntegrationStatus.INITIALIZED |
 | IntegrationStatus.ERROR | Something went wrong. |||
@@ -272,7 +274,8 @@ A short summary would be:
 - Whatever happens, you have the reset method that returns you in the initial state.
 - When the detector stops sending data, the status is DETECTOR_STOPPED. Call STOP to close the backend and stop the 
 writing.
-- When the detector stops sending data, the backend and writer have completed, 
+- When there is only the bsread writer still active, the status is BSREAD_STILL_RUNNING.
+- When the detector stops sending data, the backend, writer, and bsread writer have completed, 
 the status is FINISHED.
 
 <a id="dia_configuration_parameters"></a>
@@ -326,11 +329,11 @@ An example of a valid detector config:
 
 <a id="dia_configuration_parameters_writer"></a>
 ### Writer configuration
-Due to the data format used for the cSAXS acquisition, the writer configuration is quite large. It is divided into 2 
-parts:
+Due to the data format used for the SF acquisition, the writer configuration has additional properties. 
+It is divided into 2 parts:
 
 - Writer related config (config used by the writer itself to write the data to disk)
-- cSAXS file format config (config used to write the file in the cSAXS format)
+- SF file format config (config used to write the file in the SF format)
 
 An example of a valid writer config would be:
 ```json
@@ -340,23 +343,11 @@ An example of a valid writer config would be:
     "user_id": 0, 
     
 
-    "sl2wv": 1.0, "sl0ch": 1.0, "sl2wh": 1.0, "temp_mono_cryst_1": 1.0, "harmonic": 1,
-    "mokev": 1.0, "sl2cv": 1.0, "bpm4_gain_setting": 1.0, "mirror_coating": "placeholder text",
-    "samx": 1.0, "sample_name": "placeholder text", "bpm5y": 1.0, "sl2ch": 1.0, "curr": 1.0,
-    "bs2_status": "placeholder text", "bs2y": 1.0, "diode": 1.0, "samy": 1.0, "sl4ch": 1.0,
-    "sl4wh": 1.0, "temp_mono_cryst_2": 1.0, "sl3wh": 1.0, "mith": 1.0, "bs1_status": "placeholder text",
-    "bpm4s": 1.0, "sl0wh": 1.0, "bpm6z": 1.0, "bs1y": 1.0, "scan": "placeholder text", "bpm5_gain_setting": 1.0,
-    "bpm4z": 1.0, "bpm4x": 1.0, "date": "placeholder text", "mibd": 1.0, "temp": 1.0,
-    "idgap": 1.0, "sl4cv": 1.0, "sl1wv": 1.0, "sl3wv": 1.0, "sl1ch": 1.0, "bs2x": 1.0, "bpm6_gain_setting": 1.0,
-    "bpm4y": 1.0, "bpm6s": 1.0, "sample_description": "placeholder text", "bpm5z": 1.0, "moth1": 1.0,
-    "sec": 1.0, "sl3cv": 1.0, "bs1x": 1.0, "bpm6_saturation_value": 1.0, "bpm5s": 1.0, "mobd": 1.0,
-    "sl1wh": 1.0, "sl4wv": 1.0, "bs2_det_dist": 1.0, "bpm5_saturation_value": 1.0,
-    "fil_comb_description": "placeholder text", "bpm5x": 1.0, "bpm4_saturation_value": 1.0, "bs1_det_dist": 1.0,
-    "sl3ch": 1.0, "bpm6y": 1.0, "sl1cv": 1.0, "bpm6x": 1.0, "ftrans": 1.0, "samz": 1.0
+    SOMETHING IS MISSING!
 }
 ```
 
-**Warning**: Please note that this 2 attributes must match the information you provided to the detector:
+**Warning**: Please note that this attribute must match the information you provided to the detector:
 
 - (writer) n_frames == (detector) frames
 
@@ -369,11 +360,11 @@ To configure the writer, you must specify:
 - *"n_frames"*: Number of frames to acquire.
 - *"user_id"*: Under which user to run the writer.
 
-In addition to this properties, a valid config must also have the parameters needed for the cSAXS file format.
+In addition to this properties, a valid config must also have the parameters needed for the SF file format.
 
-#### cSAXS file format config
+#### SF file format config
 
-The following fields are required to write a valid cSAXS formated file. 
+The following fields are required to write a valid SF formatted file. 
 On the right side is the path inside the HDF5 file where the value will be stored.
 
 - *"scan"*: "/entry/title",
@@ -396,78 +387,22 @@ On the right side is the path inside the HDF5 file where the value will be store
 - *"bpm4s"*: \["/entry/instrument/XBPM4/XBPM4_sum/data", "/entry/control/integral"\],
 - *"bpm4\_saturation_value"*: "/entry/instrument/XBPM4/XBPM4_sum/saturation_value",
 - *"bpm4x"*: "/entry/instrument/XBPM4/XBPM4_x/data",
-- *"bpm4y"*: "/entry/instrument/XBPM4/XBPM4_y/data",
-- *"bpm4z"*: "/entry/instrument/XBPM4/XBPM4_skew/data",
-- *"mith"*: "/entry/instrument/mirror/incident_angle",
-- *"mirror\_coating"*: "/entry/instrument/mirror/coating_material",
-- *"mibd"*: "/entry/instrument/mirror/bend_y",
-- *"bpm5\_gain\_setting"*: "/entry/instrument/XBPM5/XBPM5/gain_setting",
-- *"bpm5s"*: "/entry/instrument/XBPM5/XBPM5_sum/data",
-- *"bpm5\_saturation_value"*: "/entry/instrument/XBPM5/XBPM5_sum/saturation_value",
-- *"bpm5x"*: "/entry/instrument/XBPM5/XBPM5_x/data",
-- *"bpm5y"*: "/entry/instrument/XBPM5/XBPM5_y/data",
-- *"bpm5z"*: "/entry/instrument/XBPM5/XBPM5_skew/data",
-- *"sl2wh"*: "/entry/instrument/slit_2/x_gap",
-- *"sl2wv"*: "/entry/instrument/slit_2/y_gap",
-- *"sl2ch"*: "/entry/instrument/slit_2/x_translation",
-- *"sl2cv"*: "/entry/instrument/slit_2/height",
-- *"bpm6\_gain\_setting"*: "/entry/instrument/XBPM6/XBPM6/gain_setting",
-- *"bpm6s"*: "/entry/instrument/XBPM6/XBPM6_sum/data",
-- *"bpm6\_saturation\_value"*: "/entry/instrument/XBPM6/XBPM6_sum/saturation_value",
-- *"bpm6x"*: "/entry/instrument/XBPM6/XBPM6_x/data",
-- *"bpm6y"*: "/entry/instrument/XBPM6/XBPM6_y/data",
-- *"bpm6z"*: "/entry/instrument/XBPM6/XBPM6_skew/data",
-- *"sl3wh"*: "/entry/instrument/slit_3/x_gap",
-- *"sl3wv"*: "/entry/instrument/slit_3/y_gap",
-- *"sl3ch"*: "/entry/instrument/slit_3/x_translation",
-- *"sl3cv"*: "/entry/instrument/slit_3/height",
-- *"fil\_comb\_description"*: "/entry/instrument/filter_set/type",
-- *"sl4wh"*: "/entry/instrument/slit_4/x_gap",
-- *"sl4wv"*: "/entry/instrument/slit_4/y_gap",
-- *"sl4ch"*: "/entry/instrument/slit_4/x_translation",
-- *"sl4cv"*: "/entry/instrument/slit_4/height",
-- *"bs1x"*: "/entry/instrument/beam_stop_1/x",
-- *"bs1y"*: "/entry/instrument/beam_stop_1/y",
-- *"bs1\_det\_dist"*: "/entry/instrument/beam_stop_1/distance_to_detector",
-- *"bs1\_status"*: "/entry/instrument/beam_stop_1/status",
-- *"bs2x"*: "/entry/instrument/beam_stop_2/x",
-- *"bs2y"*: "/entry/instrument/beam_stop_2/y",
-- *"bs2_det_dist"*: "/entry/instrument/beam_stop_2/distance_to_detector",
-- *"bs2_status"*: "/entry/instrument/beam_stop_2/status",
-- *"diode"*: "/entry/instrument/beam_stop_2/data",
-- *"sample\_name"*: "/entry/sample/name",
-- *"sample\_description"*: "/entry/sample/description",
-- *"samx"*: "/entry/sample/x_translation",
-- *"samy"*: "/entry/sample/y_translation",
-- *"temp"*: "/entry/sample/temperature_log"
+
 
 <a id="deployment_info"></a>
 ## Deployment information
 
 In this section we will describe the current deployment, server by server.
 
-<a id="deployment_info_28"></a>
-## xbl-daq-28 (Backend server)
-On xbl-daq-28 we are running the backend server. The backend is listening on address:
+<a id="deployment_info_daq_1"></a>
+## sf-daq-1 (DIA, backend, writer, bsread server)
+We are running all the services on sf-daq-1. Listening addresses:
 
-- **http://xbl-daq-28:8080**
+- Detector integration API: **http://sf-daq-1:10000**
+- bsread writer: **http://sf-daq-1:**
+- Backend: **http://sf-daq-1:**
 
-It is run using a **systemd** service (/etc/systemd/system/detector_backend.service). 
-
-The services invokes the startup file **/home/dbe/start_dbe.sh**.
-
-The service can be controlled with the following commands (using sudo or root):
-- **systemctl start detector\_backend.service** (start the backend)
-- **systemctl stop detector\_backend.service** (stop the backend)
-- **journalctl -u detector\_backend.service -f** (check the backend logs)
-
-<a id="deployment_info_27"></a>
-## xbl-daq-27 (DIA and writer server)
-On xbl-daq-27 we are running the detector integration api. The DIA is listening on address:
-
-- **http://xbl-daq-27:10000**
-
-It is run using a **systemd** service (/etc/systemd/system/dia.service). 
+All services are run using a **systemd** service (/etc/systemd/system/). 
 
 The services invokes the startup file **/home/dia/start_dia.sh**.
 
