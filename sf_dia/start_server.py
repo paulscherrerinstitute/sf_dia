@@ -5,11 +5,11 @@ import bottle
 from detector_integration_api import config
 from detector_integration_api.client.backend_rest_client import BackendClient
 from detector_integration_api.client.cpp_writer_client import CppWriterClient
-from detector_integration_api.client.detector_cli_client import DetectorClient
 from detector_integration_api.rest_api.rest_server import register_rest_interface
 from mflow_nodes import NodeClient
 
 from sf_dia import manager
+from sf_dia.client.detector_timing_cli_client import DetectorTimingClient
 
 _logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def start_integration_server(host, port,
     backend_client = BackendClient(backend_api_url)
     writer_client = CppWriterClient(backend_stream_url, writer_port)
     bsread_client = NodeClient(bsread_url, bsread_instance_name)
-    detector_client = DetectorClient()
+    detector_client = DetectorTimingClient()
 
     integration_manager = manager.IntegrationManager(writer_client=writer_client,
                                                      backend_client=backend_client,

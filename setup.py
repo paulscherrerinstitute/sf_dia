@@ -10,5 +10,6 @@ setup(name="sf_dia",
 
       license="GPL3",
 
-      packages=['sf_dia']
+      packages=['sf_dia',
+                'sf_dia.client']
       )
