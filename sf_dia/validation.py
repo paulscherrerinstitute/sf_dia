@@ -130,23 +130,25 @@ def interpret_status(statuses):
     # If no other conditions match.
     status = IntegrationStatus.ERROR
 
-    if cmp(writer, False) and cmp(detector, "idle") and cmp(backend, "INITIALIZED") and cmp(bsread, False):
+    if cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "INITIALIZED") and cmp(bsread, False):
         status = IntegrationStatus.INITIALIZED
 
-    elif cmp(writer, False) and cmp(detector, "idle") and cmp(backend, "CONFIGURED") and cmp(bsread, False):
+    elif cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "CONFIGURED") and cmp(bsread, False):
         status = IntegrationStatus.CONFIGURED
 
-    elif cmp(writer, True) and cmp(detector, ("running", "waiting")) and cmp(backend, "OPEN") and cmp(bsread, True):
+    elif cmp(writer, ("receiving", "writing")) and cmp(detector, ("running", "waiting")) and \
+            cmp(backend, "OPEN") and cmp(bsread, True):
         status = IntegrationStatus.RUNNING
 
-    elif cmp(writer, True) and cmp(detector, "idle") and cmp(backend, "OPEN") and cmp(bsread, True):
+    elif cmp(writer, ("receiving", "writing")) and cmp(detector, "idle") and \
+            cmp(backend, "OPEN") and cmp(bsread, (True, False)):
         status = IntegrationStatus.DETECTOR_STOPPED
 
-    elif cmp(writer, False) and cmp(detector, "idle") and cmp(backend, "OPEN") and cmp(bsread, False):
-        status = IntegrationStatus.FINISHED
-
-    elif cmp(writer, False) and cmp(detector, "idle") and cmp(backend, "OPEN") and cmp(bsread, True):
+    elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and cmp(backend, "OPEN") and cmp(bsread, True):
         status = IntegrationStatus.BSREAD_STILL_RUNNING
+
+    elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and cmp(backend, "OPEN") and cmp(bsread, False):
+        status = IntegrationStatus.FINISHED
 
     _logger.debug("Statuses interpreted as '%s'.", status)
 
