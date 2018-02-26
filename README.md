@@ -142,79 +142,16 @@ curl -X POST http://sf-daq-1:10000/api/v1/reset
 # Write 1000 frames, as user id 11057 (gac-x12saop), to file "/sls/X12SA/Data10/gac-x12saop/tmp/dia_test.h5".
 curl -X PUT http://sf-daq-1:10000/api/v1/config -H "Content-Type: application/json" -d '
 {"backend": {"bit_depth": 16, "n_frames": 10},
- "detector": {"dr": 16, "exptime": 1, "frames": 10, "period": 0.1, "exptime": 0.001},
+ "detector": {"dr": 16, "frames": 10, "exptime": 0.001},
  "writer": {
   "n_frames": 10,
   "output_file": "/sls/X12SA/Data10/gac-x12saop/tmp/dia_test_4.h5",
   "user_id": 11057,
   
-  "bpm4_gain_setting": 1.0,
-  "bpm4_saturation_value": 1.0,
-  "bpm4s": 1.0,
-  "bpm4x": 1.0,
-  "bpm4y": 1.0,
-  "bpm4z": 1.0,
-  "bpm5_gain_setting": 1.0,
-  "bpm5_saturation_value": 1.0,
-  "bpm5s": 1.0,
-  "bpm5x": 1.0,
-  "bpm5y": 1.0,
-  "bpm5z": 1.0,
-  "bpm6_gain_setting": 1.0,
-  "bpm6_saturation_value": 1.0,
-  "bpm6s": 1.0,
-  "bpm6x": 1.0,
-  "bpm6y": 1.0,
-  "bpm6z": 1.0,
-  "bs1_det_dist": 1.0,
-  "bs1_status": "placeholder text",
-  "bs1x": 1.0,
-  "bs1y": 1.0,
-  "bs2_det_dist": 1.0,
-  "bs2_status": "placeholder text",
-  "bs2x": 1.0,
-  "bs2y": 1.0,
-  "curr": 1.0,
-  "date": "placeholder text",
-  "diode": 1.0,
-  "fil_comb_description": "placeholder text",
-  "ftrans": 1.0,
-  "harmonic": 1,
-  "idgap": 1.0,
-  "mibd": 1.0,
-  "mirror_coating": "placeholder text",
-  "mith": 1.0,
-  "mobd": 1.0,
-  "mokev": 1.0,
-  "moth1": 1.0,
-  "sample_description": "placeholder text",
-  "sample_name": "placeholder text",
-  "samx": 1.0,
-  "samy": 1.0,
-  "samz": 1.0,
-  "scan": "placeholder text",
-  "sec": 1.0,
-  "sl0ch": 1.0,
-  "sl0wh": 1.0,
-  "sl1ch": 1.0,
-  "sl1cv": 1.0,
-  "sl1wh": 1.0,
-  "sl1wv": 1.0,
-  "sl2ch": 1.0,
-  "sl2cv": 1.0,
-  "sl2wh": 1.0,
-  "sl2wv": 1.0,
-  "sl3ch": 1.0,
-  "sl3cv": 1.0,
-  "sl3wh": 1.0,
-  "sl3wv": 1.0,
-  "sl4ch": 1.0,
-  "sl4cv": 1.0,
-  "sl4wh": 1.0,
-  "sl4wv": 1.0,
-  "temp": 1.0,
-  "temp_mono_cryst_1": 1.0,
-  "temp_mono_cryst_2": 1.0
+  "general/created": "today",
+  "general/user": "p11057",
+  "general/process": "dia",
+  "general/instrument": "jungfrau"
  }
 }'
 
@@ -288,7 +225,6 @@ The following are the parameters in the DIA.
 ### Detector configuration
 The mandatory attributes for the detector configuration are:
 
-- *"period"*: Period of time (in seconds) for each frame.
 - *"frames"*: Number of frames to acquire.
 - *"dr"*: Dynamic range - number of bits (16, 32 etc.)
 - *"exptime"* - Exposure time.
@@ -299,7 +235,6 @@ complete list and explanation of the attributes.
 An example of a valid detector config:
 ```json
 {
-  "period": 0.1,
   "frames": 1000,
   "dr": 32,
   "exptime": 0.0001
@@ -344,7 +279,10 @@ An example of a valid writer config would be:
     "user_id": 0, 
     
 
-    SOMETHING IS MISSING!
+    "general/created": "today",
+    "general/user": "p11057",
+    "general/process": "dia",
+    "general/instrument": "jungfrau"
 }
 ```
 
@@ -368,26 +306,10 @@ In addition to this properties, a valid config must also have the parameters nee
 The following fields are required to write a valid SF formatted file. 
 On the right side is the path inside the HDF5 file where the value will be stored.
 
-- *"scan"*: "/entry/title",
-- *"curr"*: "/entry/instrument/source/current",
-- *"idgap"*: "/entry/instrument/insertion_device/gap",
-- *"harmonic"*: "/entry/instrument/insertion_device/harmonic",
-- *"sl0wh"*: "/entry/instrument/slit_0/x_gap",
-- *"sl0ch"*: "/entry/instrument/slit_0/x_translation",
-- *"sl1wh"*: "/entry/instrument/slit_1/x_gap",
-- *"sl1wv"*: "/entry/instrument/slit_1/y_gap",
-- *"sl1ch"*: "/entry/instrument/slit_1/x_translation",
-- *"sl1cv"*: "/entry/instrument/slit_1/height",
-- *"mokev"*: "/entry/instrument/monochromator/energy",
-- *"moth1"*: \["/entry/instrument/monochromator/crystal_1/bragg_angle", "/entry/instrument/monochromator/crystal_2/bragg_angle"\],
-- *"temp\_mono\_cryst_1"*: "/entry/instrument/monochromator/crystal_1/temperature",
-- *"temp\_mono\_cryst_2"*: "/entry/instrument/monochromator/crystal_2/temperature",
-- *"mobd"*: "/entry/instrument/monochromator/crystal_2/bend_x",
-- *"sec"*: \["/entry/instrument/XBPM4/XBPM4/count_time", "/entry/instrument/XBPM5/XBPM5/count_time", "/entry/instrument/XBPM6/XBPM6/count_time"\],
-- *"bpm4\_gain\_setting"*: "/entry/instrument/XBPM4/XBPM4/gain_setting",
-- *"bpm4s"*: \["/entry/instrument/XBPM4/XBPM4_sum/data", "/entry/control/integral"\],
-- *"bpm4\_saturation_value"*: "/entry/instrument/XBPM4/XBPM4_sum/saturation_value",
-- *"bpm4x"*: "/entry/instrument/XBPM4/XBPM4_x/data",
+- *"general/created"* : "/general/created",
+- *"general/user"*: "/general/user",
+- *"general/process*": "/general/process",
+- *"general/instrument*": "/general/instrument"
 
 
 <a id="deployment_info"></a>
@@ -395,17 +317,24 @@ On the right side is the path inside the HDF5 file where the value will be store
 
 In this section we will describe the current deployment, server by server.
 
+There are 2 servers:
+
+- sf-daq-1: Bernina deployment.
+- sf-daq-2: Alvra deployment.
+
+This 2 deployments are identical. In this document we will describe only sf-daq-1.
+
 <a id="deployment_info_daq_1"></a>
 ## sf-daq-1 (DIA, backend, writer, bsread server)
 We are running all the services on sf-daq-1. Listening addresses:
 
 - Detector integration API: **http://sf-daq-1:10000**
-- bsread writer: **http://sf-daq-1:**
-- Backend: **http://sf-daq-1:**
+- bsread writer: **http://sf-daq-1:8083**
+- Backend: **http://sf-daq-1:8080**
 
 All services are run using a **systemd** service (/etc/systemd/system/). 
 
-The services invokes the startup file **/home/dia/start_dia.sh**.
+The services invokes the startup file **/home/dbe/start_*.sh**.
 
 The service can be controlled with the following commands (using sudo or root):
 - **systemctl start dia.service** (start the backend)
@@ -413,6 +342,6 @@ The service can be controlled with the following commands (using sudo or root):
 - **journalctl -u dia.service -f** (check the dia logs)
 
 ### Writer
-The writer is spawn on request from the DIA. To do that, DIA uses the startup file **/home/dia/start_writer.sh**.
+The writer is spawn on request from the DIA. To do that, DIA uses the startup file **/home/dbe/start_writer.sh**.
 
 Each time the writer is spawn, a separate log file is generated in **/var/log/h5_zmq_writer/**.
