@@ -15,7 +15,7 @@ requirements:
     run:
         - python
         - pyepics
-        - detector_integration_api >=1.0.3
+        - detector_integration_api >=1.1.0
 
 build:
   entry_points:

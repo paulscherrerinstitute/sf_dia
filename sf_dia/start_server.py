@@ -17,14 +17,20 @@ _logger = logging.getLogger(__name__)
 def start_integration_server(host, port,
                              backend_api_url, backend_stream_url, writer_port,
                              bsread_url, bsread_instance_name, disable_bsread,
-                             timing_pv, timing_start_code, timing_stop_code):
+                             timing_pv, timing_start_code, timing_stop_code,
+                             writer_executable, writer_log_folder):
 
     _logger.info("Starting integration REST API with:\nBackend url: %s\nBackend stream: "
                  "%s\nWriter port: %s\nbsread url: %s\n",
                  backend_api_url, backend_stream_url, str(writer_port), bsread_url)
 
+    _logger.info("Using writer executable '%s' and writing writer logs to '%s'.", writer_executable, writer_log_folder)
+
     backend_client = BackendClient(backend_api_url)
-    writer_client = CppWriterClient(backend_stream_url, writer_port)
+    writer_client = CppWriterClient(stream_url=backend_stream_url,
+                                    writer_executable=writer_executable,
+                                    writer_port=writer_port,
+                                    log_folder=writer_log_folder)
     bsread_client = NodeClient(bsread_url, bsread_instance_name)
     detector_client = DetectorTimingClient(timing_pv, timing_start_code, timing_stop_code)
 
@@ -62,6 +68,10 @@ def main():
 
     parser.add_argument("-w", "--writer_port", type=int, default=10001,
                         help="Writer REST API port.")
+    parser.add_argument("--writer_executable", type=str, default="/home/dbe/start_writer.sh",
+                        help="Executable to start the writer.")
+    parser.add_argument("--writer_log_folder", type=str, default="/var/log/h5_zmq_writer",
+                        help="Log directory for writer logs.")
 
     parser.add_argument("-s", "--bsread_url", default=config.DEFAULT_BSREAD_URL,
                         help="Writer REST API url.")
@@ -85,7 +95,9 @@ def main():
     start_integration_server(arguments.interface, arguments.port,
                              arguments.backend_url, arguments.backend_stream, arguments.writer_port,
                              arguments.bsread_url, arguments.bsread_instance_name, arguments.disable_bsread,
-                             arguments.timing_pv, arguments.timing_start_code, arguments.timing_stop_code)
+                             arguments.timing_pv, arguments.timing_start_code, arguments.timing_stop_code,
+                             writer_executable=arguments.writer_executable,
+                             writer_log_folder=arguments.writer_log_folder)
 
 
 if __name__ == "__main__":
