@@ -25,6 +25,10 @@ MANDATORY_DETECTOR_CONFIG_PARAMETERS = ["frames", "dr", "exptime"]
 MANDATORY_BSREAD_CONFIG_PARAMETERS = ["output_file", "user_id"]
 
 SF_FORMAT_INPUT_PARAMETERS = {
+    "general/created": str,
+    "general/user": str,
+    "general/process": str,
+    "general/instrument": str
 }
 
 
