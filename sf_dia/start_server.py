@@ -73,7 +73,7 @@ def main():
     parser.add_argument("--writer_log_folder", type=str, default="/var/log/h5_zmq_writer",
                         help="Log directory for writer logs.")
 
-    parser.add_argument("-s", "--bsread_url", default=config.DEFAULT_BSREAD_URL,
+    parser.add_argument("-bsread_url", "--bsread_url", default=config.DEFAULT_BSREAD_URL,
                         help="Writer REST API url.")
     parser.add_argument("--bsread_instance_name", default=config.DEFAULT_BSREAD_INSTANCE_NAME,
                         help="Writer instance name.")
