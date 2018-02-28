@@ -29,11 +29,11 @@ The detector integration is made up from the following components:
 <a id="quick"></a>
 ## Quick introduction
 
-**DIA Address 1:** http://sf-daq-1:10000 
+**DIA Address 1 (Bernina):** http://sf-daq-1:10000 
 
-**DIA Address 2:** http://sf-daq-2:10000 
+**DIA Address 2 (Alvra):** http://sf-daq-2:10000 
 
-All the examples in this document will be given using **DIA Address 1**.
+All the examples in this document will be given using **DIA Address 2 (Alvra)**.
 
 To get a feeling on how to use the DIA, you can use the following example to start and write a test file.
 
@@ -59,14 +59,17 @@ conda install -c paulscherrerinstitute detector_integration_api
 ```python
 # Just some mock value for the file format.
 DEBUG_FORMAT_PARAMETERS = {
-   
+    "general/created": "today",
+    "general/user": "p11057",
+    "general/process": "dia",
+    "general/instrument": "jungfrau"
 }
 
 # Import the client.
 from detector_integration_api import DetectorIntegrationClient
 
 # Connect to the Eiger 9M DIA.
-client = DetectorIntegrationClient("http://sf-daq-1:10000")
+client = DetectorIntegrationClient("http://sf-daq-2:10000")
 
 # Make sure the status of the DIA is initialized.
 client.reset()
@@ -137,10 +140,10 @@ are important right now:
 
 ```bash
 # Make sure the status of the DIA is initialized.
-curl -X POST http://sf-daq-1:10000/api/v1/reset
+curl -X POST http://sf-daq-2:10000/api/v1/reset
 
 # Write 1000 frames, as user id 11057 (gac-x12saop), to file "/sls/X12SA/Data10/gac-x12saop/tmp/dia_test.h5".
-curl -X PUT http://sf-daq-1:10000/api/v1/config -H "Content-Type: application/json" -d '
+curl -X PUT http://sf-daq-2:10000/api/v1/config -H "Content-Type: application/json" -d '
 {"backend": {"bit_depth": 16, "n_frames": 10},
  "detector": {"dr": 16, "frames": 10, "exptime": 0.001},
  "writer": {
@@ -156,14 +159,14 @@ curl -X PUT http://sf-daq-1:10000/api/v1/config -H "Content-Type: application/js
 }'
 
 # Start the acquisition.
-curl -X POST http://sf-daq-1:10000/api/v1/start
+curl -X POST http://sf-daq-2:10000/api/v1/start
 
 # Get integration status.
-curl -X GET http://sf-daq-1:10000/api/v1/status
+curl -X GET http://sf-daq-2:10000/api/v1/status
 
 # Stop the acquisition. This should be called only in case of emergency:
 #   by default it should stop then the selected number of images is collected.
-curl -X POST http://sf-daq-1:10000/api/v1/stop
+curl -X POST http://sf-daq-2:10000/api/v1/stop
 ```
 
 <a id="state_machine"></a>
