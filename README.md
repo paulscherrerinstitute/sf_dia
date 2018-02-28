@@ -33,7 +33,7 @@ The detector integration is made up from the following components:
 
 **DIA Address 2 (Alvra):** http://sf-daq-2:10000 
 
-All the examples in this document will be given using **DIA Address 2 (Alvra)**.
+All the examples in this document will be given using **DIA Address 1 (Bernina)**.
 
 To get a feeling on how to use the DIA, you can use the following example to start and write a test file.
 
@@ -60,7 +60,7 @@ conda install -c paulscherrerinstitute detector_integration_api
 # Just some mock value for the file format.
 DEBUG_FORMAT_PARAMETERS = {
     "general/created": "today",
-    "general/user": "p11057",
+    "general/user": "p16582",
     "general/process": "dia",
     "general/instrument": "jungfrau"
 }
@@ -69,21 +69,21 @@ DEBUG_FORMAT_PARAMETERS = {
 from detector_integration_api import DetectorIntegrationClient
 
 # Connect to the Eiger 9M DIA.
-client = DetectorIntegrationClient("http://sf-daq-2:10000")
+client = DetectorIntegrationClient("http://sf-daq-1:10000")
 
 # Make sure the status of the DIA is initialized.
 client.reset()
 
-# Write 1000 frames, as user id 11057 (gac-x12saop), to file "/sls/X12SA/Data10/gac-x12saop/tmp/dia_test.h5".
-writer_config = {"n_frames": 1000, "user_id": 11057, "output_file": "/sls/X12SA/Data10/gac-x12saop/tmp/dia_test.h5"}
+# Write 1000 frames, as user id 11057 (gac-x12saop), to file "/sf/bernina/data/raw/p16582/test_dia.h5".
+writer_config = {"n_frames": 1000, "user_id": 16582, "output_file": "/sf/bernina/data/raw/p16582/test_dia.h5"}
 
 # Expect 1000, 16 bit frames.
 backend_config = {"bit_depth": 16, "n_frames": 1000}
 
-# Acquire 1000, 16 bit images with a period of 0.02.
-detector_config = {"dr": 16, "frames": 1000, "period": 0.02, "exptime": 0.0001}
+# Acquire 1000, 16 bit images.
+detector_config = {"dr": 16, "frames": 1000, "exptime": 0.0001}
 
-bsread_config = {}
+bsread_config = {"output_file": "/sf/bernina/data/raw/p16582/test_bsread.h5", "user_id": 16582}
 
 # Add format parameters to writer. In this case, we use the debugging one.
 writer_config.update(DEBUG_FORMAT_PARAMETERS)
@@ -140,33 +140,37 @@ are important right now:
 
 ```bash
 # Make sure the status of the DIA is initialized.
-curl -X POST http://sf-daq-2:10000/api/v1/reset
+curl -X POST http://sf-daq-:10000/api/v1/reset
 
 # Write 1000 frames, as user id 11057 (gac-x12saop), to file "/sls/X12SA/Data10/gac-x12saop/tmp/dia_test.h5".
-curl -X PUT http://sf-daq-2:10000/api/v1/config -H "Content-Type: application/json" -d '
+curl -X PUT http://sf-daq-1:10000/api/v1/config -H "Content-Type: application/json" -d '
 {"backend": {"bit_depth": 16, "n_frames": 10},
  "detector": {"dr": 16, "frames": 10, "exptime": 0.001},
  "writer": {
   "n_frames": 10,
-  "output_file": "/sls/X12SA/Data10/gac-x12saop/tmp/dia_test_4.h5",
+  "output_file": "/sf/bernina/data/raw/p16582/test_dia.h5",
   "user_id": 11057,
   
   "general/created": "today",
   "general/user": "p11057",
   "general/process": "dia",
   "general/instrument": "jungfrau"
+ },
+ "bsread": {
+  "output_file": "/sf/bernina/data/raw/p16582/test_bsread.h5", 
+  "user_id": 16582
  }
 }'
 
 # Start the acquisition.
-curl -X POST http://sf-daq-2:10000/api/v1/start
+curl -X POST http://sf-daq-1:10000/api/v1/start
 
 # Get integration status.
-curl -X GET http://sf-daq-2:10000/api/v1/status
+curl -X GET http://sf-daq-1:10000/api/v1/status
 
 # Stop the acquisition. This should be called only in case of emergency:
 #   by default it should stop then the selected number of images is collected.
-curl -X POST http://sf-daq-2:10000/api/v1/stop
+curl -X POST http://sf-daq-1:10000/api/v1/stop
 ```
 
 <a id="state_machine"></a>
@@ -314,6 +318,19 @@ On the right side is the path inside the HDF5 file where the value will be store
 - *"general/process*": "/general/process",
 - *"general/instrument*": "/general/instrument"
 
+### Bsread configuration
+Mandatory attributes for the bsread configuration are:
+
+- *"output_file"*: Location where the file will be written.
+- *"user_id"*: Under which user to run the writer.
+
+An example of a valid bsread config would be:
+```json
+{
+    "output_file": "/tmp/dia_test.h5",
+    "user_id": 0
+}
+```
 
 <a id="deployment_info"></a>
 ## Deployment information
@@ -328,14 +345,18 @@ There are 2 servers:
 This 2 deployments are identical. In this document we will describe only sf-daq-1.
 
 <a id="deployment_info_daq_1"></a>
-## sf-daq-1 (DIA, backend, writer, bsread server)
+## sf-daq-1 (DIA, backend, writer, bsread writer)
 We are running all the services on sf-daq-1. Listening addresses:
 
 - Detector integration API: **http://sf-daq-1:10000**
 - bsread writer: **http://sf-daq-1:8083**
 - Backend: **http://sf-daq-1:8080**
 
-All services are run using a **systemd** service (/etc/systemd/system/). 
+All services are run using **systemd** (/etc/systemd/system/):
+
+- detector_backend.service
+- dia.service
+- bsread.service
 
 The services invokes the startup file **/home/dbe/start_*.sh**.
 
@@ -348,3 +369,5 @@ The service can be controlled with the following commands (using sudo or root):
 The writer is spawn on request from the DIA. To do that, DIA uses the startup file **/home/dbe/start_writer.sh**.
 
 Each time the writer is spawn, a separate log file is generated in **/var/log/h5_zmq_writer/**.
+
+**Note**: You must create this folder (/var/log/h5_zmq_writer/) before running DIA.
