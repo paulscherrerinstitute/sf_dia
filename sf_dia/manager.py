@@ -140,7 +140,7 @@ class IntegrationManager(object):
         _audit_logger.info("Set acquisition configuration:\n"
                            "Writer config: %s\n"
                            "Backend config: %s\n"
-                           "Detector config: %s\n",
+                           "Detector config: %s\n"
                            "Bsread config: %s\n",
                            writer_config, backend_config, detector_config, bsread_config)
 
