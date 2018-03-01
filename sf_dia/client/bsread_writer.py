@@ -91,7 +91,10 @@ class BsreadWriterClient(object):
         else:
             _logger.warning("Terminating writer process because it did not respond in the specified time.")
 
-            requests.get(self.writer_url + "/kill", timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT)
+            try:
+                requests.get(self.writer_url + "/kill", timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT)
+            except:
+                pass
 
             self.process.wait(timeout=config.WRITER_PROCESS_TERMINATE_TIMEOUT)
 
