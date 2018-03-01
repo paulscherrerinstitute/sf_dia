@@ -161,24 +161,26 @@ def interpret_status(statuses):
     # If no other conditions match.
     interpreted_status = IntegrationStatus.ERROR
 
-    if cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "INITIALIZED") and cmp(bsread, False):
+    if cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "INITIALIZED") and cmp(bsread, "stopped"):
         interpreted_status = IntegrationStatus.INITIALIZED
 
-    elif cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "CONFIGURED") and cmp(bsread, False):
+    elif cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "CONFIGURED") and cmp(bsread, "stopped"):
         interpreted_status = IntegrationStatus.CONFIGURED
 
     elif cmp(writer, ("receiving", "writing")) and cmp(detector, ("running", "waiting")) and \
-            cmp(backend, "OPEN") and cmp(bsread, True):
+            cmp(backend, "OPEN") and cmp(bsread, ("writing", "waiting")):
         interpreted_status = IntegrationStatus.RUNNING
 
     elif cmp(writer, ("receiving", "writing")) and cmp(detector, "idle") and \
-            cmp(backend, "OPEN") and cmp(bsread, (True, False)):
+            cmp(backend, "OPEN") and cmp(bsread, ("writing", "waiting", "stopped")):
         interpreted_status = IntegrationStatus.DETECTOR_STOPPED
 
-    elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and cmp(backend, "OPEN") and cmp(bsread, True):
+    elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and \
+            cmp(backend, "OPEN") and cmp(bsread, ("writing", "waiting")):
         interpreted_status = IntegrationStatus.BSREAD_STILL_RUNNING
 
-    elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and cmp(backend, "OPEN") and cmp(bsread, False):
+    elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and cmp(backend, "OPEN") \
+            and cmp(bsread, "stopped"):
         interpreted_status = IntegrationStatus.FINISHED
 
     _logger.debug("Statuses interpreted as '%s'.", interpreted_status)

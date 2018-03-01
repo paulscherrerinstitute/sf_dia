@@ -98,7 +98,7 @@ class IntegrationManager(object):
             if self.detector_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
 
         _audit_logger.info("bsread_client.get_status()")
-        bsread_status = self.bsread_client.get_status()["is_running"] \
+        bsread_status = self.bsread_client.get_status() \
             if self.bsread_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
 
         _logger.debug("Detailed status requested:\nWriter: %s\nBackend: %s\nDetector: %s\nbsread: %s",
