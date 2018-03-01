@@ -120,14 +120,14 @@ class BsreadWriterClient(object):
             except:
                 _logger.warning("Terminating Bsread process because it did not stop in the specified time.")
 
-                requests.get(self.writer_url + "/kill", timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT)
+                try:
+                    requests.get(self.writer_url + "/kill", timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT)
+                except:
+                    pass
 
                 self.process.wait(timeout=config.WRITER_PROCESS_TERMINATE_TIMEOUT)
 
                 self.process.terminate()
-
-                raise RuntimeError("Bsread process was terminated because it did not stop in time. "
-                                   "Acquisition file maybe corrupted.")
 
         else:
             _logger.debug("Bsread process is not running.")
