@@ -24,7 +24,7 @@ MANDATORY_BACKEND_CONFIG_PARAMETERS = ["bit_depth", "n_frames"]
 MANDATORY_DETECTOR_CONFIG_PARAMETERS = ["frames", "dr", "exptime"]
 MANDATORY_BSREAD_CONFIG_PARAMETERS = ["output_file", "user_id"]
 
-SF_FORMAT_INPUT_PARAMETERS = {
+FILE_FORMAT_INPUT_PARAMETERS = {
     "general/created": str,
     "general/user": str,
     "general/process": str,
@@ -36,7 +36,7 @@ def validate_writer_config(configuration):
     if not configuration:
         raise ValueError("Writer configuration cannot be empty.")
 
-    writer_cfg_params = MANDATORY_WRITER_CONFIG_PARAMETERS + list(SF_FORMAT_INPUT_PARAMETERS.keys())
+    writer_cfg_params = MANDATORY_WRITER_CONFIG_PARAMETERS + list(FILE_FORMAT_INPUT_PARAMETERS.keys())
 
     # Check if all mandatory parameters are present.
     if not all(x in configuration for x in writer_cfg_params):
@@ -49,7 +49,7 @@ def validate_writer_config(configuration):
 
     # Check if all format parameters are of correct type.
     wrong_parameter_types = ""
-    for parameter_name, parameter_type in SF_FORMAT_INPUT_PARAMETERS.items():
+    for parameter_name, parameter_type in FILE_FORMAT_INPUT_PARAMETERS.items():
         if not isinstance(configuration[parameter_name], parameter_type):
             wrong_parameter_types += "\tWriter parameter '%s' expected of type '%s', but received of type '%s'.\n" % \
                                      (parameter_name, parameter_type, type(configuration[parameter_name]))
@@ -88,11 +88,38 @@ def validate_detector_config(configuration):
 
 def validate_bsread_config(configuration):
     if not configuration:
-        raise ValueError("Bsread configuration cannot be empty.")
+        raise ValueError("Writer configuration cannot be empty.")
 
-    if not all(x in configuration for x in MANDATORY_BSREAD_CONFIG_PARAMETERS):
-        missing_parameters = [x for x in MANDATORY_BSREAD_CONFIG_PARAMETERS if x not in configuration]
-        raise ValueError("Bsread configuration missing mandatory parameters: %s" % missing_parameters)
+    bsread_cfg_params = MANDATORY_BSREAD_CONFIG_PARAMETERS + list(FILE_FORMAT_INPUT_PARAMETERS.keys())
+
+    # Check if all mandatory parameters are present.
+    if not all(x in configuration for x in bsread_cfg_params):
+        missing_parameters = [x for x in bsread_cfg_params if x not in configuration]
+        raise ValueError("Backend configuration missing mandatory parameters: %s" % missing_parameters)
+
+    unexpected_parameters = [x for x in configuration.keys() if x not in bsread_cfg_params]
+    if unexpected_parameters:
+        raise ValueError("Received unexpected parameters for writer: %s" % unexpected_parameters)
+
+    # Check if all format parameters are of correct type.
+    wrong_parameter_types = ""
+    for parameter_name, parameter_type in FILE_FORMAT_INPUT_PARAMETERS.items():
+        if not isinstance(configuration[parameter_name], parameter_type):
+            wrong_parameter_types += "\tBsread parameter '%s' expected of type '%s', but received of type '%s'.\n" % \
+                                     (parameter_name, parameter_type, type(configuration[parameter_name]))
+
+    if wrong_parameter_types:
+        raise ValueError("Received parameters of invalid type:\n%s", wrong_parameter_types)
+
+    user_id = configuration["user_id"]
+    if user_id < E_ACCOUNT_USER_ID_RANGE[0] or user_id > E_ACCOUNT_USER_ID_RANGE[1]:
+        raise ValueError("Provided user_id %d outside of specified range [%d-%d]." % (user_id,
+                                                                                      E_ACCOUNT_USER_ID_RANGE[0],
+                                                                                      E_ACCOUNT_USER_ID_RANGE[1]))
+
+    # Check if the filename ends with h5.
+    if configuration["output_file"][-3:] != ".h5":
+        configuration["output_file"] += ".h5"
 
 
 def validate_configs_dependencies(writer_config, backend_config, detector_config, bsread_config):

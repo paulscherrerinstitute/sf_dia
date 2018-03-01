@@ -9,5 +9,14 @@
   "general/user": "p11057",
   "general/process": "dia",
   "general/instrument": "jungfrau"
+ },
+ "bsread": {
+  "output_file": "/tmp/out.h5",
+  "user_id": 11057,
+
+  "general/created": "today",
+  "general/user": "p11057",
+  "general/process": "dia",
+  "general/instrument": "jungfrau"
  }
 }

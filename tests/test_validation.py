@@ -1,6 +1,6 @@
 import unittest
 
-from sf_dia.validation import validate_writer_config
+from sf_dia.validation import validate_writer_config, validate_bsread_config
 from tests.utils import get_valid_config
 
 
@@ -32,3 +32,8 @@ class TestValidation(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Received unexpected parameters"):
             writer_config["unexpected"] = "jup"
             validate_writer_config(writer_config)
+
+    def test_bsread_config(self):
+        bsread_config = get_valid_config()["bsread"]
+
+        validate_bsread_config(bsread_config)

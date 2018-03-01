@@ -323,14 +323,33 @@ Mandatory attributes for the bsread configuration are:
 
 - *"output_file"*: Location where the file will be written.
 - *"user_id"*: Under which user to run the writer.
+- *"general/created"* : SF file format config
+- *"general/user"*: SF file format config
+- *"general/process*": SF file format config
+- *"general/instrument*": SF file format config
 
 An example of a valid bsread config would be:
 ```json
 {
     "output_file": "/tmp/dia_test.h5",
-    "user_id": 0
+    "user_id": 0,
+    
+    "general/created": "today",
+    "general/user": "p11057",
+    "general/process": "dia",
+    "general/instrument": "jungfrau"
 }
 ```
+
+#### SF file format config
+
+The following fields are required to write a valid SF formatted file. 
+On the right side is the path inside the HDF5 file where the value will be stored.
+
+- *"general/created"* : "/general/created",
+- *"general/user"*: "/general/user",
+- *"general/process*": "/general/process",
+- *"general/instrument*": "/general/instrument"
 
 <a id="deployment_info"></a>
 ## Deployment information
