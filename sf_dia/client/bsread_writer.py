@@ -25,7 +25,7 @@ class BsreadWriterClient(object):
         if log_folder is not None:
 
             if not os.path.exists(log_folder):
-                raise ValueError("Provided writer log folder '%s' does not exist." % log_folder)
+                raise ValueError("Provided Bsread log folder '%s' does not exist." % log_folder)
 
             self.log_folder = log_folder
 
@@ -43,10 +43,10 @@ class BsreadWriterClient(object):
     def start(self):
 
         if self.is_running():
-            raise RuntimeError("Writer process already running. Cannot start new one until old one is still alive.")
+            raise RuntimeError("Bsread process already running. Cannot start new one until old one is still alive.")
 
         if not self.writer_parameters:
-            raise ValueError("Writer parameters not set.")
+            raise ValueError("Bsread parameters not set.")
 
         timestamp = datetime.now().strftime(config.WRITER_PROCESS_LOG_FILENAME_TIME_FORMAT)
 
@@ -67,7 +67,7 @@ class BsreadWriterClient(object):
                                                   self.writer_parameters.get("user_id", -1),
                                                   self.writer_port)
 
-        _logger.debug("Starting writer with command '%s'.", writer_command)
+        _logger.debug("Starting Bsread with command '%s'.", writer_command)
         self.process = Popen(writer_command, shell=True, stdout=self.process_log_file, stderr=self.process_log_file)
 
         sleep(config.WRITER_PROCESS_STARTUP_WAIT_TIME)
@@ -89,7 +89,7 @@ class BsreadWriterClient(object):
             except:
                 sleep(config.WRITER_PROCESS_RETRY_DELAY)
         else:
-            _logger.warning("Terminating writer process because it did not respond in the specified time.")
+            _logger.warning("Terminating Bsread process because it did not respond in the specified time.")
 
             try:
                 requests.get(self.writer_url + "/kill", timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT)
@@ -100,11 +100,11 @@ class BsreadWriterClient(object):
 
             self.process.terminate()
 
-            raise RuntimeError("Count not start writer process in time. Check writer logs.")
+            raise RuntimeError("Count not start bsread process in time. Check bsread logs.")
 
     def stop(self):
 
-        _logger.debug("Stopping writer.")
+        _logger.debug("Stopping Bsread.")
 
         if self.is_running():
             requests.get(self.writer_url + "/stop", timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT)
@@ -113,7 +113,7 @@ class BsreadWriterClient(object):
                 self.process.wait(timeout=config.WRITER_PROCESS_TERMINATE_TIMEOUT)
 
             except:
-                _logger.warning("Terminating writer process because it did not stop in the specified time.")
+                _logger.warning("Terminating Bsread process because it did not stop in the specified time.")
 
                 requests.get(self.writer_url + "/kill", timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT)
 
@@ -121,11 +121,11 @@ class BsreadWriterClient(object):
 
                 self.process.terminate()
 
-                raise RuntimeError("Writer process was terminated because it did not stop in time. "
+                raise RuntimeError("Bsread process was terminated because it did not stop in time. "
                                    "Acquisition file maybe corrupted.")
 
         else:
-            _logger.debug("Writer process is not running.")
+            _logger.debug("Bsread process is not running.")
 
         if self.process_log_file:
             self.process_log_file.flush()
@@ -152,7 +152,7 @@ class BsreadWriterClient(object):
         self.writer_parameters = writer_parameters
 
     def reset(self):
-        _logger.debug("Resetting writer.")
+        _logger.debug("Resetting Bsread.")
 
         self.stop()
 
