@@ -87,6 +87,7 @@ bsread_config = {"output_file": "/sf/bernina/data/raw/p16582/test_bsread.h5", "u
 
 # Add format parameters to writer. In this case, we use the debugging one.
 writer_config.update(DEBUG_FORMAT_PARAMETERS)
+bsread_config.update(DEBUG_FORMAT_PARAMETERS)
 
 configuration = {"writer": writer_config,
                  "backend": backend_config,
@@ -158,7 +159,12 @@ curl -X PUT http://sf-daq-1:10000/api/v1/config -H "Content-Type: application/js
  },
  "bsread": {
   "output_file": "/sf/bernina/data/raw/p16582/test_bsread.h5", 
-  "user_id": 16582
+  "user_id": 16582,
+  
+  "general/created": "today",
+  "general/user": "p11057",
+  "general/process": "dia",
+  "general/instrument": "jungfrau"
  }
 }'
 
