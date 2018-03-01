@@ -112,9 +112,8 @@ class BsreadWriterClient(object):
         _logger.debug("Stopping Bsread.")
 
         if self.is_running():
-            requests.get(self.writer_url + "/stop", timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT)
-
             try:
+                requests.get(self.writer_url + "/stop", timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT)
                 self.process.wait(timeout=config.WRITER_PROCESS_TERMINATE_TIMEOUT)
 
             except:
