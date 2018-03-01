@@ -256,4 +256,4 @@ class IntegrationManager(object):
         return {"writer": self.writer_client.get_statistics(),
                 "backend": self.backend_client.get_metrics(),
                 "detector": {},
-                "bsread": {}}
+                "bsread": self.bsread_client.get_statistics()}
