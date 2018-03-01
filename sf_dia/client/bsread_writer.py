@@ -61,10 +61,11 @@ class BsreadWriterClient(object):
         self.process_log_file.write("Parameters:\n%s\n" % json.dumps(self.writer_parameters, indent=4))
         self.process_log_file.flush()
 
-        writer_command_format = "sh " + self.writer_executable + " %s %s %s"
+        writer_command_format = "sh " + self.writer_executable + " %s %s %s %s"
         writer_command = writer_command_format % (self.stream_url,
                                                   self.writer_parameters["output_file"],
-                                                  self.writer_parameters.get("user_id", -1))
+                                                  self.writer_parameters.get("user_id", -1),
+                                                  self.writer_port)
 
         _logger.debug("Starting writer with command '%s'.", writer_command)
         self.process = Popen(writer_command, shell=True, stdout=self.process_log_file, stderr=self.process_log_file)
