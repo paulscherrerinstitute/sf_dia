@@ -81,7 +81,7 @@ writer_config = {"n_frames": 1000, "user_id": 16582, "output_file": "/sf/bernina
 backend_config = {"bit_depth": 16, "n_frames": 1000}
 
 # Acquire 1000, 16 bit images.
-detector_config = {"dr": 16, "frames": 1000, "exptime": 0.0001}
+detector_config = {"dr": 16, "cycles": 1000, "exptime": 0.0001}
 
 bsread_config = {"output_file": "/sf/bernina/data/raw/p16582/test_bsread.h5", "user_id": 16582}
 
@@ -146,7 +146,7 @@ curl -X POST http://sf-daq-:10000/api/v1/reset
 # Write 1000 frames, as user id 11057 (gac-x12saop), to file "/sls/X12SA/Data10/gac-x12saop/tmp/dia_test.h5".
 curl -X PUT http://sf-daq-1:10000/api/v1/config -H "Content-Type: application/json" -d '
 {"backend": {"bit_depth": 16, "n_frames": 10},
- "detector": {"dr": 16, "frames": 10, "exptime": 0.001},
+ "detector": {"dr": 16, "cycles": 10, "exptime": 0.001},
  "writer": {
   "n_frames": 10,
   "output_file": "/sf/bernina/data/raw/p16582/test_dia.h5",
@@ -238,7 +238,7 @@ The following are the parameters in the DIA.
 ### Detector configuration
 The mandatory attributes for the detector configuration are:
 
-- *"frames"*: Number of frames to acquire.
+- *"cycles"*: Number of frames to acquire.
 - *"dr"*: Dynamic range - number of bits (16, 32 etc.)
 - *"exptime"* - Exposure time.
 
@@ -248,7 +248,7 @@ complete list and explanation of the attributes.
 An example of a valid detector config:
 ```json
 {
-  "frames": 1000,
+  "cycles": 1000,
   "dr": 32,
   "exptime": 0.0001
 }
