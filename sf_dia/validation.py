@@ -132,7 +132,7 @@ def validate_configs_dependencies(writer_config, backend_config, detector_config
         raise ValueError("Invalid config. Backend 'n_frames' set to '%s', but detector 'cycles' set to '%s'. "
                          "They must be equal." % (backend_config["n_frames"], detector_config["cycles"]))
 
-    if writer_config["n_frames"] != backend_config["cycles"]:
+    if writer_config["n_frames"] != backend_config["n_frames"]:
         raise ValueError("Invalid config. Backend 'n_frames' set to '%s', but writer 'n_frames' set to '%s'. "
                          "They must be equal." % (backend_config["n_frames"], writer_config["n_frames"]))
 
