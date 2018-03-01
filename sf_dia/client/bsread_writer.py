@@ -78,9 +78,9 @@ class BsreadWriterClient(object):
 
             try:
                 response = requests.post(self.writer_url + "/parameters", json=process_parameters,
-                                         timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT)
+                                         timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT).json()
 
-                if response.status_code != 200:
+                if response["state"] != "ok":
                     continue
 
                 break
