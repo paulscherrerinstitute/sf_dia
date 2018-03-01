@@ -21,7 +21,7 @@ E_ACCOUNT_USER_ID_RANGE = [10000, 29999]
 
 MANDATORY_WRITER_CONFIG_PARAMETERS = ["n_frames", "user_id", "output_file"]
 MANDATORY_BACKEND_CONFIG_PARAMETERS = ["bit_depth", "n_frames"]
-MANDATORY_DETECTOR_CONFIG_PARAMETERS = ["frames", "dr", "exptime"]
+MANDATORY_DETECTOR_CONFIG_PARAMETERS = ["dr", "exptime", "cycles"]
 MANDATORY_BSREAD_CONFIG_PARAMETERS = ["output_file", "user_id"]
 
 FILE_FORMAT_INPUT_PARAMETERS = {
@@ -128,11 +128,11 @@ def validate_configs_dependencies(writer_config, backend_config, detector_config
                          " They must be equal."
                          % (backend_config["bit_depth"], detector_config["dr"]))
 
-    if backend_config["n_frames"] != detector_config["frames"]:
-        raise ValueError("Invalid config. Backend 'n_frames' set to '%s', but detector 'frames' set to '%s'. "
-                         "They must be equal." % (backend_config["n_frames"], detector_config["frames"]))
+    if backend_config["n_frames"] != detector_config["cycles"]:
+        raise ValueError("Invalid config. Backend 'n_frames' set to '%s', but detector 'cycles' set to '%s'. "
+                         "They must be equal." % (backend_config["n_frames"], detector_config["cycles"]))
 
-    if writer_config["n_frames"] != backend_config["n_frames"]:
+    if writer_config["n_frames"] != backend_config["cycles"]:
         raise ValueError("Invalid config. Backend 'n_frames' set to '%s', but writer 'n_frames' set to '%s'. "
                          "They must be equal." % (backend_config["n_frames"], writer_config["n_frames"]))
 
