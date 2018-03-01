@@ -159,4 +159,7 @@ class BsreadWriterClient(object):
         if not self.is_running():
             return {}
 
-        return requests.get(self.writer_url + "/statistics", timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT).json()
+        response = requests.get(self.writer_url + "/statistics",
+                                timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT).json()
+
+        return response["statistics"]
