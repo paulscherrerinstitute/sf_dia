@@ -29,7 +29,8 @@ class BsreadWriterClient(object):
 
             self.log_folder = log_folder
 
-        self.writer_url = config.WRITER_PROCESS_URL_FORMAT % writer_port
+        self.writer_url = config.WRITER_PROCESS_URL_FORMAT % self.writer_port
+
         self.writer_parameters = None
 
         self.process = None
@@ -78,7 +79,11 @@ class BsreadWriterClient(object):
         for _ in range(config.WRITER_PROCESS_RETRY_N):
 
             try:
-                response = requests.post(self.writer_url + "/parameters", json=process_parameters,
+                bsread_url = self.writer_url + "/parameters"
+
+                _logger.info("Sending to url '%s' parameters: %s", bsread_url, process_parameters)
+
+                response = requests.post(bsread_url, json=process_parameters,
                                          timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT).json()
 
                 if response["state"] != "ok":
@@ -86,7 +91,8 @@ class BsreadWriterClient(object):
 
                 break
 
-            except:
+            except Exception as e:
+                _logger.debug("Exception while trying to set parameters on bsread writer", e)
                 sleep(config.WRITER_PROCESS_RETRY_DELAY)
         else:
             _logger.warning("Terminating Bsread process because it did not respond in the specified time.")

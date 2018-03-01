@@ -1,7 +1,8 @@
 from setuptools import setup
 
 setup(name="sf_dia",
-      version="1.2.1",
+      version="1.2.1fdsfsdll"
+              "",
       maintainer="Paul Scherrer Institute",
       maintainer_email="daq@psi.ch",
       author="Paul Scherrer Institute",
