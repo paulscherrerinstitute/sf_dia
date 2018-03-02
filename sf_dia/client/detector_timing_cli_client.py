@@ -25,11 +25,16 @@ class DetectorTimingClient(DetectorClient):
 
     def start(self):
 
+        super(DetectorTimingClient, self).start()
+
         _logger.debug("Executing start command: caput %s %d", self.timing_pv, self.start_event_code)
 
         epics.caput(self.timing_pv, self.start_event_code, wait=True, timeout=self.caput_timeout)
 
     def stop(self):
+
+        super(DetectorTimingClient, self).stop()
+
         _logger.debug("Executing stop command: caput %s %d", self.timing_pv, self.stop_event_code)
 
         epics.caput(self.timing_pv, self.stop_event_code, wait=True, timeout=self.caput_timeout)
