@@ -63,10 +63,6 @@ def validate_writer_config(configuration):
                                                                                       E_ACCOUNT_USER_ID_RANGE[0],
                                                                                       E_ACCOUNT_USER_ID_RANGE[1]))
 
-    # Check if the filename ends with h5.
-    if configuration["output_file"][-3:] != ".h5":
-        configuration["output_file"] += ".h5"
-
 
 def validate_backend_config(configuration):
     if not configuration:
@@ -116,10 +112,6 @@ def validate_bsread_config(configuration):
         raise ValueError("Provided user_id %d outside of specified range [%d-%d]." % (user_id,
                                                                                       E_ACCOUNT_USER_ID_RANGE[0],
                                                                                       E_ACCOUNT_USER_ID_RANGE[1]))
-
-    # Check if the filename ends with h5.
-    if configuration["output_file"][-3:] != ".h5":
-        configuration["output_file"] += ".h5"
 
 
 def validate_configs_dependencies(writer_config, backend_config, detector_config, bsread_config):
