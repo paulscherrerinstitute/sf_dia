@@ -53,19 +53,20 @@ class IntegrationManager(object):
         _audit_logger.info("Stopping acquisition.")
 
         status = self.get_acquisition_status()
+        if status != IntegrationStatus.BSREAD_STILL_RUNNING and status != IntegrationStatus.FINISHED:
+            raise ValueError("Cannot stop acquisition in %s state. Please wait for backend to finish." % status)
 
-        if status == IntegrationStatus.RUNNING:
-            _audit_logger.info("detector_client.stop()")
-            self.detector_client.stop()
-
-            _audit_logger.info("backend_client.close()")
-            self.backend_client.close()
-
-            _audit_logger.info("writer_client.stop()")
-            self.writer_client.stop()
-
-            _audit_logger.info("bsread_client.stop()")
-            self.bsread_client.stop()
+        _audit_logger.info("detector_client.stop()")
+        self.detector_client.stop()
+   
+        _audit_logger.info("backend_client.close()")
+        self.backend_client.close()
+   
+        _audit_logger.info("writer_client.stop()")
+        self.writer_client.stop()
+   
+        _audit_logger.info("bsread_client.stop()")
+        self.bsread_client.stop()
 
         return self.reset()
 
@@ -222,7 +223,12 @@ class IntegrationManager(object):
                 "detector": self.detector_client.is_client_enabled()}
 
     def reset(self):
+
         _audit_logger.info("Resetting integration api.")
+
+        status = self.get_acquisition_status()
+        if status == IntegrationStatus.RUNNING or status == IntegrationStatus.DETECTOR_STOPPED:
+            raise ValueError("Cannot reset acquisition in %s state. Please wait for backend to finish." % status)
 
         self.last_config_successful = False
 
