@@ -87,7 +87,10 @@ class BsreadWriterClient(object):
                                          timeout=config.WRITER_PROCESS_COMMUNICATION_TIMEOUT).json()
 
                 if response["state"] != "ok":
-                    _logger.debug("Exception while trying to set parameters on bsread writer.", response)
+                    _logger.debug("Exception while trying to set parameters on bsread writer. Retrying.", response)
+                    
+                    sleep(config.WRITER_PROCESS_RETRY_DELAY)
+                    continue
 
                 break
 
