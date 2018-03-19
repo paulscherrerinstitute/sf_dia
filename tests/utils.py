@@ -11,7 +11,7 @@ def get_test_bsread_integration_manager(manager_module):
     backend_client = MockBackendClient()
     detector_client = MockDetectorClient()
     writer_client = MockCppWriterClient()
-    bsread_client = MockMflowNodesClient()
+    bsread_client = MockCppWriterClient()
 
     manager = manager_module.IntegrationManager(backend_client, writer_client, detector_client, bsread_client)
 
@@ -22,7 +22,7 @@ def start_test_bsread_integration_server(host, port, manager_module):
     backend_client = MockBackendClient()
     writer_client = MockCppWriterClient()
     detector_client = MockDetectorClient()
-    bsread_client = MockMflowNodesClient()
+    bsread_client = MockCppWriterClient()
 
     integration_manager = manager_module.IntegrationManager(writer_client=writer_client,
                                                             backend_client=backend_client,

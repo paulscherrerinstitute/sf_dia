@@ -12,13 +12,13 @@ class TestSfStateMachine(unittest.TestCase):
         manager.writer_client.status = "stopped"
         manager.detector_client.status = "idle"
         manager.backend_client.status = "INITIALIZED"
-        manager.bsread_client.is_running = False
+        manager.bsread_client.status = "stopped"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.INITIALIZED)
 
         manager.writer_client.status = "stopped"
         manager.detector_client.status = "idle"
         manager.backend_client.status = "CONFIGURED"
-        manager.bsread_client.is_running = False
+        manager.bsread_client.status = "stopped"
         manager.last_config_successful = True
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.CONFIGURED)
 
@@ -28,59 +28,59 @@ class TestSfStateMachine(unittest.TestCase):
         manager.writer_client.status = "receiving"
         manager.detector_client.status = "running"
         manager.backend_client.status = "OPEN"
-        manager.bsread_client.is_running = True
+        manager.bsread_client.status = "writing"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.RUNNING)
 
         manager.writer_client.status = "writing"
         manager.detector_client.status = "waiting"
         manager.backend_client.status = "OPEN"
-        manager.bsread_client.is_running = True
+        manager.bsread_client.status = "waiting"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.RUNNING)
 
         manager.writer_client.status = "receiving"
         manager.detector_client.status = "idle"
         manager.backend_client.status = "OPEN"
-        manager.bsread_client.status = {"is_running": True}
+        manager.bsread_client.status = "writing"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.DETECTOR_STOPPED)
 
         manager.writer_client.status = "writing"
         manager.detector_client.status = "idle"
         manager.backend_client.status = "OPEN"
-        manager.bsread_client.is_running = True
+        manager.bsread_client.status = "waiting"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.DETECTOR_STOPPED)
 
         manager.writer_client.status = "receiving"
         manager.detector_client.status = "idle"
         manager.backend_client.status = "OPEN"
-        manager.bsread_client.is_running = False
+        manager.bsread_client.status = "stopped"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.DETECTOR_STOPPED)
 
         manager.writer_client.status = "writing"
         manager.detector_client.status = "idle"
         manager.backend_client.status = "OPEN"
-        manager.bsread_client.is_running = False
+        manager.bsread_client.status = "stopped"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.DETECTOR_STOPPED)
 
         manager.writer_client.status = "finished"
         manager.detector_client.status = "idle"
         manager.backend_client.status = "OPEN"
-        manager.bsread_client.is_running = True
+        manager.bsread_client.status = "waiting"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.BSREAD_STILL_RUNNING)
 
         manager.writer_client.status = "stopped"
         manager.detector_client.status = "idle"
         manager.backend_client.status = "OPEN"
-        manager.bsread_client.is_running = True
+        manager.bsread_client.status = "writing"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.BSREAD_STILL_RUNNING)
 
         manager.writer_client.status = "finished"
         manager.detector_client.status = "idle"
         manager.backend_client.status = "OPEN"
-        manager.bsread_client.is_running = False
+        manager.bsread_client.status = "stopped"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.FINISHED)
 
         manager.writer_client.status = "stopped"
         manager.detector_client.status = "idle"
         manager.backend_client.status = "OPEN"
-        manager.bsread_client.is_running = False
+        manager.bsread_client.status = "stopped"
         self.assertEqual(manager.get_acquisition_status(), IntegrationStatus.FINISHED)

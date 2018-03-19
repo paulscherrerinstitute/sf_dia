@@ -12,10 +12,10 @@ _audit_logger = getLogger("audit_trail")
 
 class IntegrationManager(object):
     def __init__(self, backend_client, writer_client, detector_client, bsread_client):
-        self.backend_client = ClientDisableWrapper(backend_client)
-        self.writer_client = ClientDisableWrapper(writer_client)
-        self.detector_client = ClientDisableWrapper(detector_client)
-        self.bsread_client = ClientDisableWrapper(bsread_client)
+        self.backend_client = ClientDisableWrapper(backend_client, True, "backend")
+        self.writer_client = ClientDisableWrapper(writer_client, True, "writer")
+        self.detector_client = ClientDisableWrapper(detector_client, True, "detector")
+        self.bsread_client = ClientDisableWrapper(bsread_client, True, "bsread writer")
 
         self._last_set_backend_config = {}
         self._last_set_writer_config = {}
