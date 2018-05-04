@@ -8,7 +8,7 @@ from detector_integration_api.client.cpp_writer_client import CppWriterClient
 from detector_integration_api.rest_api.rest_server import register_rest_interface
 
 from sf_dia import manager
-from sf_dia.client.bsread_writer import BsreadWriterClient
+from sf_dia.client.bsread_writer_client import BsreadWriterClient
 from sf_dia.client.detector_timing_cli_client import DetectorTimingClient
 
 _logger = logging.getLogger(__name__)
