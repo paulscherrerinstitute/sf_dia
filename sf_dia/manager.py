@@ -246,6 +246,23 @@ class IntegrationManager(object):
 
         return check_for_target_status(self.get_acquisition_status, IntegrationStatus.INITIALIZED)
 
+    def kill(self):
+        _audit_logger.info("Killing acquisition.")
+
+        _audit_logger.info("detector_client.stop()")
+        self.detector_client.stop()
+
+        _audit_logger.info("backend_client.reset()")
+        self.backend_client.reset()
+
+        _audit_logger.info("writer_client.kill()")
+        self.writer_client.kill()
+
+        _audit_logger.info("bsread_client.kill()")
+        self.bsread_client.kill()
+
+        return self.reset()
+
     def get_server_info(self):
         return {
             "clients": {
