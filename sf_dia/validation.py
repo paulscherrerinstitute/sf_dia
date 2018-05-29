@@ -167,7 +167,7 @@ def interpret_status(statuses):
             cmp(backend, "OPEN") and cmp(bsread, ("writing", "waiting", "stopped")):
         interpreted_status = IntegrationStatus.DETECTOR_STOPPED
 
-    elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and \
+    elif cmp(writer, ("receiving", "writing")) and cmp(detector, "idle") and \
             cmp(backend, "OPEN") and cmp(bsread, ("writing", "waiting")) and not cmp(bsread, ("DISABLED", )):
         interpreted_status = IntegrationStatus.BSREAD_STILL_RUNNING
 

@@ -73,7 +73,7 @@ class DataBufferWriterClient(object):
 
         _logger.debug("Setting process %s parameters: %s", self.PROCESS_NAME, process_parameters)
 
-        if not self._send_request_to_process(requests.post, self.process_url + "/parameters",
+        if not self._send_request_to_process(requests.post, self.broker_url + "/parameters",
                                              request_json=process_parameters):
             _logger.warning("Terminating %s process because it did not respond in the specified time." %
                             self.PROCESS_NAME)
