@@ -3,15 +3,14 @@ import json
 import bottle
 import os
 from detector_integration_api.rest_api.rest_server import register_rest_interface
-from detector_integration_api.tests.utils import MockBackendClient, MockDetectorClient, MockCppWriterClient, \
-    MockMflowNodesClient
+from detector_integration_api.tests.utils import MockBackendClient, MockDetectorClient, MockExternalProcessClient
 
 
 def get_test_bsread_integration_manager(manager_module):
     backend_client = MockBackendClient()
     detector_client = MockDetectorClient()
-    writer_client = MockCppWriterClient()
-    bsread_client = MockCppWriterClient()
+    writer_client = MockExternalProcessClient()
+    bsread_client = MockExternalProcessClient()
 
     manager = manager_module.IntegrationManager(backend_client, writer_client, detector_client, bsread_client)
 
@@ -20,9 +19,9 @@ def get_test_bsread_integration_manager(manager_module):
 
 def start_test_bsread_integration_server(host, port, manager_module):
     backend_client = MockBackendClient()
-    writer_client = MockCppWriterClient()
+    writer_client = MockExternalProcessClient()
     detector_client = MockDetectorClient()
-    bsread_client = MockCppWriterClient()
+    bsread_client = MockExternalProcessClient()
 
     integration_manager = manager_module.IntegrationManager(writer_client=writer_client,
                                                             backend_client=backend_client,
