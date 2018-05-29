@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name="sf_dia",
-      version="1.3.0",
+      version="1.4.0",
       maintainer="Paul Scherrer Institute",
       maintainer_email="daq@psi.ch",
       author="Paul Scherrer Institute",
