@@ -91,11 +91,11 @@ def validate_bsread_config(configuration):
     # Check if all mandatory parameters are present.
     if not all(x in configuration for x in bsread_cfg_params):
         missing_parameters = [x for x in bsread_cfg_params if x not in configuration]
-        raise ValueError("Backend configuration missing mandatory parameters: %s" % missing_parameters)
+        raise ValueError("Bsread configuration missing mandatory parameters: %s" % missing_parameters)
 
     unexpected_parameters = [x for x in configuration.keys() if x not in bsread_cfg_params]
     if unexpected_parameters:
-        raise ValueError("Received unexpected parameters for writer: %s" % unexpected_parameters)
+        raise ValueError("Received unexpected parameters for bsread: %s" % unexpected_parameters)
 
     # Check if all format parameters are of correct type.
     wrong_parameter_types = ""

@@ -1,4 +1,3 @@
-import os.path
 import requests
 from logging import getLogger
 from time import sleep
@@ -8,7 +7,7 @@ from detector_integration_api import config
 _logger = getLogger(__name__)
 
 
-class DatabufferWriterClient(object):
+class DataBufferWriterClient(object):
     PROCESS_NAME = "databuffer_writer"
 
     def __init__(self, broker_url):
