@@ -67,7 +67,6 @@ class DataBufferWriterClient(object):
         if status is False:
             raise ValueError("Cannot get status of process %s ." % self.PROCESS_NAME)
 
-        status = status.json()
         return status["status"]
 
     def set_parameters(self, process_parameters):
@@ -97,7 +96,6 @@ class DataBufferWriterClient(object):
         if statistics is False:
             raise ValueError("Process %s is running but cannot get statistics." % self.PROCESS_NAME)
 
-        statistics = statistics.json()
         return statistics
 
     def kill(self):
