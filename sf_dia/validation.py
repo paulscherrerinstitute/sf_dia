@@ -156,19 +156,19 @@ def interpret_status(statuses):
     if cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "INITIALIZED") and cmp(bsread, "stopped"):
         interpreted_status = IntegrationStatus.INITIALIZED
 
-    elif cmp(writer, "configured") and cmp(detector, "idle") and cmp(backend, "CONFIGURED") and cmp(bsread, "stopped"):
+    elif cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "CONFIGURED") and cmp(bsread, "configured"):
         interpreted_status = IntegrationStatus.CONFIGURED
 
-    elif cmp(writer, ("receiving", "writing", "configured")) and cmp(detector, ("running", "waiting")) and \
-            cmp(backend, "OPEN") and cmp(bsread, ("writing", "waiting")):
+    elif cmp(writer, ("receiving", "writing")) and cmp(detector, ("running", "waiting")) and \
+            cmp(backend, "OPEN") and cmp(bsread, ("receiving", "waiting", "configured")):
         interpreted_status = IntegrationStatus.RUNNING
 
-    elif cmp(writer, ("receiving", "writing", "configured")) and cmp(detector, "idle") and \
-            cmp(backend, "OPEN") and cmp(bsread, ("writing", "waiting", "stopped")):
+    elif cmp(writer, ("receiving", "writing")) and cmp(detector, "idle") and \
+            cmp(backend, "OPEN") and cmp(bsread, ("receiving", "waiting", "configured")):
         interpreted_status = IntegrationStatus.DETECTOR_STOPPED
 
-    elif cmp(writer, ("receiving", "writing", "configured")) and cmp(detector, "idle") and \
-            cmp(backend, "OPEN") and cmp(bsread, ("writing", "waiting")) and not cmp(bsread, ("DISABLED", )):
+    elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and \
+            cmp(backend, "OPEN") and cmp(bsread, ("receiving", "waiting")):
         interpreted_status = IntegrationStatus.BSREAD_STILL_RUNNING
 
     elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and cmp(backend, "OPEN") \
