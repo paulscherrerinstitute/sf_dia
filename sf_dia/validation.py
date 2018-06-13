@@ -160,16 +160,16 @@ def interpret_status(statuses):
         interpreted_status = IntegrationStatus.CONFIGURED
 
     elif cmp(writer, ("receiving", "writing")) and cmp(detector, ("running", "waiting")) and \
-            cmp(backend, "OPEN") and cmp(bsread, ("receiving", "waiting", "configured")):
+            cmp(backend, "OPEN") and cmp(bsread, ("receiving", "configured")):
         interpreted_status = IntegrationStatus.RUNNING
 
     elif cmp(writer, ("receiving", "writing")) and cmp(detector, "idle") and \
-            cmp(backend, "OPEN") and cmp(bsread, ("receiving", "waiting", "configured")):
+            cmp(backend, "OPEN") and cmp(bsread, ("receiving", "configured")):
         interpreted_status = IntegrationStatus.DETECTOR_STOPPED
 
     elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and \
             cmp(backend, "OPEN") and \
-            cmp(bsread, ("receiving", "waiting")) and bsread != ClientDisableWrapper.STATUS_DISABLED:
+            cmp(bsread, "receiving") and bsread != ClientDisableWrapper.STATUS_DISABLED:
         interpreted_status = IntegrationStatus.BSREAD_STILL_RUNNING
 
     elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and cmp(backend, "OPEN") \
