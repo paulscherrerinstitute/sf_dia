@@ -14,6 +14,7 @@ class IntegrationStatus(Enum):
     BSREAD_STILL_RUNNING = "bsread_still_running",
     FINISHED = "finished"
     ERROR = "error"
+    INCONSISTENT = "inconsistent"
 
 
 E_ACCOUNT_USER_ID_RANGE = [10000, 29999]
@@ -133,14 +134,11 @@ def interpret_status(statuses):
 
     _logger.debug("Interpreting statuses: %s", statuses)
 
-    writer = statuses["writer"]
-    backend = statuses["backend"]
-    detector = statuses["detector"]
     bsread = statuses["bsread"]
-
+    
     def cmp(status, expected_value):
 
-        _logger.debug("Comparing status '%s' with expected status '%s'.", status, expected_value)
+        #_logger.debug("Comparing status '%s' with expected status '%s'.", status, expected_value)
 
         if status == ClientDisableWrapper.STATUS_DISABLED:
             return True
@@ -150,32 +148,45 @@ def interpret_status(statuses):
         else:
             return status == expected_value
 
-    # If no other conditions match.
-    interpreted_status = IntegrationStatus.ERROR
+    detector_status = set()
 
-    if cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "INITIALIZED") and cmp(bsread, "stopped"):
-        interpreted_status = IntegrationStatus.INITIALIZED
+    for key in statuses.keys():
+        if key == "bsread":
+            continue
+        writer = statuses[key]["writer"]
+        backend = statuses[key]["backend"]
+        detector = statuses[key]["detector"]
 
-    elif cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "CONFIGURED") and cmp(bsread, "configured"):
-        interpreted_status = IntegrationStatus.CONFIGURED
+        # If no other conditions match.
+        interpreted_status = IntegrationStatus.ERROR
 
-    elif cmp(writer, ("receiving", "writing")) and cmp(detector, ("running", "waiting")) and \
-            cmp(backend, "OPEN") and cmp(bsread, ("receiving", "configured", "stopped")):
-        interpreted_status = IntegrationStatus.RUNNING
+        if cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "INITIALIZED") and cmp(bsread, "stopped"):
+            interpreted_status = IntegrationStatus.INITIALIZED
 
-    elif cmp(writer, ("receiving", "writing")) and cmp(detector, "idle") and \
-            cmp(backend, "OPEN") and cmp(bsread, ("receiving", "configured", "stopped")):
-        interpreted_status = IntegrationStatus.DETECTOR_STOPPED
+        elif cmp(writer, "stopped") and cmp(detector, "idle") and cmp(backend, "CONFIGURED") and cmp(bsread, "configured"):
+            interpreted_status = IntegrationStatus.CONFIGURED
 
-    elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and \
-            cmp(backend, "OPEN") and \
-            cmp(bsread, "receiving") and bsread != ClientDisableWrapper.STATUS_DISABLED:
-        interpreted_status = IntegrationStatus.BSREAD_STILL_RUNNING
+        elif cmp(writer, ("receiving", "writing")) and cmp(detector, ("running", "waiting")) and \
+                cmp(backend, "OPEN") and cmp(bsread, ("receiving", "configured", "stopped")):
+            interpreted_status = IntegrationStatus.RUNNING
 
-    elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and cmp(backend, "OPEN") \
-            and cmp(bsread, "stopped"):
-        interpreted_status = IntegrationStatus.FINISHED
+        elif cmp(writer, ("receiving", "writing")) and cmp(detector, "idle") and \
+                cmp(backend, "OPEN") and cmp(bsread, ("receiving", "configured", "stopped")):
+            interpreted_status = IntegrationStatus.DETECTOR_STOPPED
 
-    _logger.debug("Statuses interpreted as '%s'.", interpreted_status)
+        elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and \
+                cmp(backend, "OPEN") and \
+                cmp(bsread, "receiving") and bsread != ClientDisableWrapper.STATUS_DISABLED:
+            interpreted_status = IntegrationStatus.BSREAD_STILL_RUNNING
 
-    return interpreted_status
+        elif cmp(writer, ("finished", "stopped")) and cmp(detector, "idle") and cmp(backend, "OPEN") \
+                and cmp(bsread, "stopped"):
+            interpreted_status = IntegrationStatus.FINISHED
+
+        _logger.debug("Statuses interpreted as '%s' for detector %s .", interpreted_status, key)
+
+        detector_status.add(interpreted_status)
+
+    resulting_status = list(detector_status)[0] if len(detector_status) == 1 else IntegrationStatus.INCONSISTENT
+
+    return resulting_status

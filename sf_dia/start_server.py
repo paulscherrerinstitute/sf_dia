@@ -9,36 +9,56 @@ from detector_integration_api.rest_api.rest_server import register_rest_interfac
 
 from sf_dia import manager
 from sf_dia.client.databuffer_writer_client import DataBufferWriterClient
-from sf_dia.client.detector_timing_cli_client import DetectorTimingClient
+from detector_integration_api.client.detector_cli_client import DetectorClient
+
+from sf_dia.client.detector_pipeline import DetectorPipeline
 
 _logger = logging.getLogger(__name__)
 
-
-def start_integration_server(host, port,
+def start_integration_server(host, port, config_detectors,
                              backend_api_url, backend_stream_url, writer_port,
                              broker_url, disable_bsread,
                              timing_pv, timing_start_code, timing_stop_code,
                              writer_executable, writer_log_folder):
-    _logger.info("Starting integration REST API with:\nBackend url: %s\nBackend stream: "
-                 "%s\nWriter port: %s\nbroker_url: %s\n",
-                 backend_api_url, backend_stream_url, str(writer_port), broker_url)
+    _logger.info("Starting integration REST API with:"
+                 "\nbroker_url: %s\n",
+                 broker_url)
 
     _logger.info("Using writer executable '%s' and writing writer logs to '%s'.", writer_executable, writer_log_folder)
 
-    backend_client = BackendClient(backend_api_url)
-    writer_client = CppWriterClient(stream_url=backend_stream_url,
+
+    enabled_detectors = {}
+
+    if config_detectors != None:
+        sf_config = __import__(config_detectors)
+        available_detectors = sf_config.available_detectors
+    else:
+        available_detectors = {}
+        available_detectors['JF1pM'] =    {'detector_id': 0, 'backend_api_url': backend_api_url, 'backend_stream_url': backend_stream_url, 'writer_port': writer_port}
+
+    for detector in available_detectors.keys():
+        backend_api_url    = available_detectors[detector]['backend_api_url']
+        backend_stream_url = available_detectors[detector]['backend_stream_url']
+        writer_port        = available_detectors[detector]['writer_port']
+        detector_id        = available_detectors[detector]['detector_id']
+        _logger.info("Detector __ %s ___:\nDetector ID: %s \nBackend url: %s\nBackend stream: "
+                 "%s\nWriter port: %s\n",
+                 detector, str(detector_id), backend_api_url, backend_stream_url, str(writer_port))
+
+        backend_client = BackendClient(backend_api_url)
+        writer_client = CppWriterClient(stream_url=backend_stream_url,
                                     writer_executable=writer_executable,
                                     writer_port=writer_port,
-                                    log_folder=writer_log_folder)
+                                    log_folder=writer_log_folder+"/multiple/"+detector)
+
+        detector_client = DetectorClient(id=detector_id)
+ 
+        enabled_detectors[detector] = DetectorPipeline(detector_client, backend_client, writer_client)
 
     bsread_client = DataBufferWriterClient(broker_url=broker_url)
 
-    detector_client = DetectorTimingClient(timing_pv, timing_start_code, timing_stop_code)
-
-    integration_manager = manager.IntegrationManager(writer_client=writer_client,
-                                                     backend_client=backend_client,
-                                                     detector_client=detector_client,
-                                                     bsread_client=bsread_client)
+    integration_manager = manager.IntegrationManager(enabled_detectors=enabled_detectors,
+                                                     bsread_client=bsread_client, timing_pv=timing_pv, timing_start_code=timing_start_code, timing_stop_code=timing_stop_code)
 
     _logger.info("Bsread writer disabled at startup: %s", disable_bsread)
     if disable_bsread:
@@ -85,6 +105,8 @@ def main():
                         help="Timing event code to start the detector.")
     parser.add_argument("--timing_stop_code", default=255,
                         help="Timing event code to stop the detector.")
+    parser.add_argument("--config_detectors",default=None,
+                        help="Specify config .py file for the available detectors, see documentation for example.")
 
     arguments = parser.parse_args()
 
@@ -93,6 +115,7 @@ def main():
 
     start_integration_server(host=arguments.interface,
                              port=arguments.port,
+                             config_detectors=arguments.config_detectors,
                              backend_api_url=arguments.backend_url,
                              backend_stream_url=arguments.backend_stream,
                              writer_port=arguments.writer_port,

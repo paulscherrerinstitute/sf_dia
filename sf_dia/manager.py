@@ -6,15 +6,34 @@ from detector_integration_api.utils import ClientDisableWrapper, check_for_targe
 from sf_dia.validation import IntegrationStatus, validate_writer_config, validate_backend_config, \
     validate_detector_config, validate_bsread_config, validate_configs_dependencies, interpret_status
 
+from sf_dia.client.detector_pipeline import DetectorPipeline
+
+import epics
+
 _logger = getLogger(__name__)
 _audit_logger = getLogger("audit_trail")
 
+DEFAULT_CAPUT_TIMEOUT = 3
 
 class IntegrationManager(object):
-    def __init__(self, backend_client, writer_client, detector_client, bsread_client):
-        self.backend_client = ClientDisableWrapper(backend_client, True, "backend")
-        self.writer_client = ClientDisableWrapper(writer_client, True, "writer")
-        self.detector_client = ClientDisableWrapper(detector_client, True, "detector")
+    def __init__(self, enabled_detectors, bsread_client, timing_pv, timing_start_code, timing_stop_code, caput_timeout=None):
+
+        self.timing_pv         = timing_pv
+        self.timing_start_code = timing_start_code
+        self.timing_stop_code  = timing_stop_code
+        if caput_timeout is None:
+            self.caput_timeout = DEFAULT_CAPUT_TIMEOUT
+        else:
+            self.caput_timeout = caput_timeout
+
+        self.enabled_detectors = {}
+        for detector in enabled_detectors.keys():
+             backend_client  = enabled_detectors[detector].backend_client
+             writer_client   = enabled_detectors[detector].writer_client
+             detector_client = enabled_detectors[detector].detector_client
+             self.enabled_detectors[detector] = DetectorPipeline(ClientDisableWrapper(detector_client, True, "detector"), 
+                                                                 ClientDisableWrapper(backend_client,  True, "backend"),
+                                                                 ClientDisableWrapper(writer_client,   True, "writer"))
         self.bsread_client = ClientDisableWrapper(bsread_client, True, "bsread writer")
 
         self._last_set_backend_config = {}
@@ -23,6 +42,7 @@ class IntegrationManager(object):
         self._last_set_bsread_config = {}
 
         self.last_config_successful = False
+
 
     def start_acquisition(self):
         _audit_logger.info("Starting acquisition.")
@@ -34,14 +54,12 @@ class IntegrationManager(object):
         _audit_logger.info("bsread_client.start()")
         self.bsread_client.start()
 
-        _audit_logger.info("backend_client.open()")
-        self.backend_client.open()
+        _audit_logger.info("detector_pipeline .start()")
+        for detector in  self.enabled_detectors.keys():
+            self.enabled_detectors[detector].start()
 
-        _audit_logger.info("writer_client.start()")
-        self.writer_client.start()
-
-        _audit_logger.info("detector_client.start()")
-        self.detector_client.start()
+        _logger.debug("Executing start command: caput %s %d", self.timing_pv, self.timing_start_code)
+        epics.caput(self.timing_pv, self.timing_start_code, wait=True, timeout=self.caput_timeout)
 
         return check_for_target_status(self.get_acquisition_status,
                                        (IntegrationStatus.RUNNING,
@@ -56,15 +74,13 @@ class IntegrationManager(object):
         if status != IntegrationStatus.BSREAD_STILL_RUNNING and status != IntegrationStatus.FINISHED:
             raise ValueError("Cannot stop acquisition in %s state. Please wait for backend to finish." % status)
 
-        _audit_logger.info("detector_client.stop()")
-        self.detector_client.stop()
-   
-        _audit_logger.info("backend_client.close()")
-        self.backend_client.close()
-   
-        _audit_logger.info("writer_client.stop()")
-        self.writer_client.stop()
-   
+        _logger.debug("Executing stop command: caput %s %d", self.timing_pv, self.timing_stop_code)
+        epics.caput(self.timing_pv, self.timing_stop_code, wait=True, timeout=self.caput_timeout)
+ 
+        _audit_logger.info("detector_pipeline .stop()")
+        for detector in self.enabled_detectors.keys():
+            self.enabled_detectors[detector].stop()
+
         _audit_logger.info("bsread_client.stop()")
         self.bsread_client.stop()
 
@@ -72,7 +88,7 @@ class IntegrationManager(object):
 
     def get_acquisition_status(self):
         status = interpret_status(self.get_status_details())
-
+        _audit_logger.info("Get_acquisition_status : %s", status)
         # There is no way of knowing if the detector is configured as the user desired.
         # We have a flag to check if the user config was passed on to the detector.
         if status == IntegrationStatus.CONFIGURED and self.last_config_successful is False:
@@ -86,29 +102,39 @@ class IntegrationManager(object):
     def get_status_details(self):
         _audit_logger.info("Getting status details.")
 
-        _audit_logger.info("writer_client.get_status()")
-        writer_status = self.writer_client.get_status() \
-            if self.writer_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
+        status = {} 
 
-        _audit_logger.info("backend_client.get_status()")
-        backend_status = self.backend_client.get_status() \
-            if self.backend_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
+        for detector in self.enabled_detectors.keys():
+            _audit_logger.info("Detector : %s", detector)
+            detector_client, backend_client, writer_client = self.enabled_detectors[detector].return_clients()
+   
+            _audit_logger.info("writer_client.get_status()")
+            writer_status = writer_client.get_status() \
+                if writer_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
 
-        _audit_logger.info("detector_client.get_status()")
-        detector_status = self.detector_client.get_status() \
-            if self.detector_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
+            _audit_logger.info("backend_client.get_status()")
+            backend_status = backend_client.get_status() \
+                if backend_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
+
+            _audit_logger.info("detector_client.get_status()")
+            detector_status = detector_client.get_status() \
+                if detector_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
+
+            _logger.debug("Detailed status requested (%s):\nWriter: %s\nBackend: %s\nDetector: %s",
+                      detector, writer_status, backend_status, detector_status)
+
+            status[detector] = {"detector": detector_status, "backend": backend_status, "writer": writer_status}
 
         _audit_logger.info("bsread_client.get_status()")
         bsread_status = self.bsread_client.get_status() \
             if self.bsread_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
 
-        _logger.debug("Detailed status requested:\nWriter: %s\nBackend: %s\nDetector: %s\nbsread: %s",
-                      writer_status, backend_status, detector_status, bsread_status)
+        _logger.debug("Detailed status requested:\nbsread: %s",
+                      bsread_status)
 
-        return {"writer": writer_status,
-                "backend": backend_status,
-                "detector": detector_status,
-                "bsread": bsread_status}
+        status["bsread"] = bsread_status
+
+        return status
 
     def get_acquisition_config(self):
         # Always return a copy - we do not want this to be updated.
@@ -146,34 +172,56 @@ class IntegrationManager(object):
                            writer_config, backend_config, detector_config, bsread_config)
 
         # Before setting the new config, validate the provided values. All must be valid.
-        if self.writer_client.client_enabled:
-            validate_writer_config(writer_config)
+        for detector in self.enabled_detectors.keys():
+            _audit_logger.info("Detector : %s", detector)
+            detector_client, backend_client, writer_client = self.enabled_detectors[detector].return_clients()
 
-        if self.backend_client.client_enabled:
-            validate_backend_config(backend_config)
+            if writer_client.client_enabled:
+                validate_writer_config(writer_config)
 
-        if self.detector_client.client_enabled:
-            validate_detector_config(detector_config)
+            if backend_client.client_enabled:
+                validate_backend_config(backend_config)
+
+            if detector_client.client_enabled:
+                validate_detector_config(detector_config)
 
         if self.bsread_client.client_enabled:
             validate_bsread_config(bsread_config)
 
         validate_configs_dependencies(writer_config, backend_config, detector_config, bsread_config)
 
-        _audit_logger.info("backend_client.set_config(backend_config)")
-        self.backend_client.set_config(backend_config)
-        self._last_set_backend_config = backend_config
+        for detector in self.enabled_detectors.keys():
+            _audit_logger.info("Detector : %s", detector)
+            detector_client, backend_client, writer_client = self.enabled_detectors[detector].return_clients()
 
-        _audit_logger.info("writer_client.set_parameters(writer_config)")
-        self.writer_client.set_parameters(writer_config)
-        self._last_set_writer_config = writer_config
+            _audit_logger.info("backend_client.set_config(backend_config)")
+            modified_backend_config = copy(backend_config)
+            if "pede_corrections_filename" in backend_config.keys():
+                modified_backend_config["pede_corrections_filename"] = backend_config["pede_corrections_filename"] + "." + detector + "_res.h5"
+                _audit_logger.info("Pedestal file for detector %s will be %s", detector, modified_backend_config["pede_corrections_filename"])
+            backend_client.set_config(modified_backend_config)
+            self._last_set_backend_config = backend_config
 
-        _audit_logger.info("detector_client.set_config(detector_config)")
-        self.detector_client.set_config(detector_config)
-        self._last_set_detector_config = detector_config
+            _audit_logger.info("writer_client.set_parameters(writer_config)")
+            output_file = writer_config["output_file"]
+            modified_writer_config = copy(writer_config)
+            if output_file != "/dev/null":
+                modified_writer_config["output_file"] = output_file + "." + detector + ".h5"
+                _audit_logger.info("Output file for detector %s will be %s", detector, modified_writer_config["output_file"]) 
+            writer_client.set_parameters(modified_writer_config)
+            self._last_set_writer_config = writer_config
+
+            _audit_logger.info("detector_client.set_config(detector_config)")
+            detector_client.set_config(detector_config)
+            self._last_set_detector_config = detector_config
 
         _audit_logger.info("bsread_client.set_parameters(bsread_config)")
-        self.bsread_client.set_parameters(bsread_config)
+        output_file = bsread_config["output_file"]
+        modified_bsread_config = copy(bsread_config)
+        if output_file != "/dev/null":
+            modified_bsread_config["output_file"] = output_file + ".BSREAD.h5"
+            _audit_logger.info("Output file for bsread will be %s", modified_bsread_config["output_file"])
+        self.bsread_client.set_parameters(modified_bsread_config)
         self._last_set_bsread_config = bsread_config
 
         self.last_config_successful = True
@@ -200,27 +248,35 @@ class IntegrationManager(object):
 
     def set_clients_enabled(self, client_status):
 
-        if "backend" in client_status:
-            self.backend_client.set_client_enabled(client_status["backend"])
-            _logger.info("Backend client enable=%s.", self.backend_client.is_client_enabled())
 
-        if "writer" in client_status:
-            self.writer_client.set_client_enabled(client_status["writer"])
-            _logger.info("Writer client enable=%s.", self.writer_client.is_client_enabled())
+        for detector in self.enabled_detectors.keys():
+            _audit_logger.info("Detector : %s", detector)
+            detector_client, backend_client, writer_client = self.enabled_detectors[detector].return_clients()
 
-        if "detector" in client_status:
-            self.detector_client.set_client_enabled(client_status["detector"])
-            _logger.info("Detector client enable=%s.", self.detector_client.is_client_enabled())
+            if "backend" in client_status:
+                backend_client.set_client_enabled(client_status["backend"])
+                _logger.info("(%s) Backend client enable=%s.", detector, backend_client.is_client_enabled())
+
+            if "writer" in client_status:
+                writer_client.set_client_enabled(client_status["writer"])
+                _logger.info("(%s) Writer client enable=%s.", detector, writer_client.is_client_enabled())
+
+            if "detector" in client_status:
+                detector_client.set_client_enabled(client_status["detector"])
+                _logger.info("(%s) Detector client enable=%s.", detector, detector_client.is_client_enabled())
 
         if "bsread" in client_status:
             self.bsread_client.set_client_enabled(client_status["bsread"])
             _logger.info("bsread client enable=%s.", self.bsread_client.is_client_enabled())
 
     def get_clients_enabled(self):
-        return {"backend": self.backend_client.is_client_enabled(),
-                "writer": self.writer_client.is_client_enabled(),
-                "bsread": self.bsread_client.is_client_enabled(),
-                "detector": self.detector_client.is_client_enabled()}
+        status = {}
+        status["bsread"] = self.bsread_client.is_client_enabled()
+        for detector in self.enabled_detectors.keys():
+            status[detector] = {"backend":  self.enabled_detectors[detector].backend_client.is_client_enabled(),
+                                "writer":   self.enabled_detectors[detector].writer_client.is_client_enabled(),
+                                "detector": self.enabled_detectors[detector].detector_client.is_client_enabled()}
+        return status
 
     def reset(self):
 
@@ -232,14 +288,11 @@ class IntegrationManager(object):
 
         self.last_config_successful = False
 
-        _audit_logger.info("detector_client.stop()")
-        self.detector_client.stop()
+        _logger.debug("Executing stop command: caput %s %d", self.timing_pv, self.timing_stop_code)
+        epics.caput(self.timing_pv, self.timing_stop_code, wait=True, timeout=self.caput_timeout)
 
-        _audit_logger.info("backend_client.reset()")
-        self.backend_client.reset()
-
-        _audit_logger.info("writer_client.reset()")
-        self.writer_client.reset()
+        for detector in self.enabled_detectors.keys():
+            self.enabled_detectors[detector].reset()
 
         _audit_logger.info("bsread_client.reset()")
         self.bsread_client.reset()
@@ -249,14 +302,8 @@ class IntegrationManager(object):
     def kill(self):
         _audit_logger.info("Killing acquisition.")
 
-        _audit_logger.info("detector_client.stop()")
-        self.detector_client.stop()
-
-        _audit_logger.info("backend_client.reset()")
-        self.backend_client.reset()
-
-        _audit_logger.info("writer_client.kill()")
-        self.writer_client.kill()
+        for detector in self.enabled_detectors.keys():
+            self.enabled_detectors[detector].kill()
 
         _audit_logger.info("bsread_client.kill()")
         self.bsread_client.kill()
@@ -264,19 +311,68 @@ class IntegrationManager(object):
         return self.reset()
 
     def get_server_info(self):
+        clients = {}
+        for detector in self.enabled_detectors.keys():
+            detector_client, backend_client, writer_client = self.enabled_detectors[detector].return_clients()
+            clients[detector] = {"backend_url": backend_client.backend_url,
+                                 "writer_url":  writer_client.url,
+                                 "bsread_url":  bsread_client._api_address.format(url="")}  
+
         return {
-            "clients": {
-                "backend_url": self.backend_client.backend_url,
-                "writer_url": self.writer_client.url,
-                "bsread_url": self.bsread_client._api_address.format(url="")},
+            "clients": copy(clients),
             "clients_enabled": self.get_clients_enabled(),
             "validator": "NOT IMPLEMENTED",
-            "last_config_successful": self.last_config_successful
+            "last_config_successful": copy(self.last_config_successful)
         }
 
     def get_metrics(self):
+        status = {}
+        for detector in self.enabled_detectors.keys():
+            detector_client, backend_client, writer_client = self.enabled_detectors[detector].return_clients()
+            status[detector] = {"writer":   writer_client.get_statistics(),
+                                "backend":  backend_client.get_metrics(),
+                                "detector": {}}
+        status["bsread"] = {"bsread": self.bsread_client.get_statistics()}
+
         # Always return a copy - we do not want this to be updated.
-        return {"writer": self.writer_client.get_statistics(),
-                "backend": self.backend_client.get_metrics(),
-                "detector": {},
-                "bsread": self.bsread_client.get_statistics()}
+        return copy(status)
+
+    def backend_client_get_status(self):
+        status = {}
+        for detector in self.enabled_detectors.keys():
+            status[detector] = self.enabled_detectors[detector].backend_client.get_status()
+        _logger.info("backend_client_get_status, status : %s", status)
+        return copy(status)
+
+    def backend_client_action(self, action):
+        status = {}
+        for detector in self.enabled_detectors.keys():
+            status[detector] =  self.enabled_detectors[detector].backend_client.__getattribute__(action)()
+        _logger.info("backend_client_action, action %s, status : %s", action, status)
+        return copy(status)
+
+    def backend_client_get_config(self):
+        status = {}
+        for detector in self.enabled_detectors.keys():
+            status[detector] =  self.enabled_detectors[detector].backend_client._last_set_backend_config
+        _logger.info("backend_client_get_config: %s", status)
+        return copy(status)
+
+    def backend_client_set_config(self, new_config):
+        for detector in self.enabled_detectors.keys():
+            self.enabled_detectors[detector].backend_client.set_config(new_config)
+
+    def detector_client_set_value(self, parameter_name, parameter_value, no_verification=True):
+        status = {}
+        for detector in self.enabled_detectors.keys():
+            self.enabled_detectors[detector].detector_client.set_value(parameter_name, parameter_value, no_verification=True)
+        _logger.info("detector_client_set_value %s, %s , status %s", parameter_name, parameter_value, status)
+        return copy(status)
+
+    def detector_client_get_value(self, name):
+        status = {}
+        for detector in self.enabled_detectors.keys():
+            self.enabled_detectors[detector].detector_client.get_value(name)
+        _logger.info("detector_client_get_value %s , status %s", name, status) 
+        return copy(status)
+
