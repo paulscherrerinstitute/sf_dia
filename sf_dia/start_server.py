@@ -4,7 +4,7 @@ import logging
 import bottle
 from detector_integration_api import config
 from detector_integration_api.client.backend_rest_client import BackendClient
-from detector_integration_api.client.cpp_writer_client import CppWriterClient
+from sf_dia.client.sf_cpp_writer_client import SfCppWriterClient
 from detector_integration_api.rest_api.rest_server import register_rest_interface
 
 from sf_dia import manager
@@ -41,18 +41,23 @@ def start_integration_server(host, port, config_detectors,
         backend_stream_url = available_detectors[detector]['backend_stream_url']
         writer_port        = available_detectors[detector]['writer_port']
         detector_id        = available_detectors[detector]['detector_id']
+        n_modules          = available_detectors[detector]['n_modules']
+
         _logger.info("Detector __ %s ___:\nDetector ID: %s \nBackend url: %s\nBackend stream: "
-                 "%s\nWriter port: %s\n",
-                 detector, str(detector_id), backend_api_url, backend_stream_url, str(writer_port))
+                     "%s\nWriter port: %s\nBroker url: %s\nn_modules: %s\n",
+                     detector, str(detector_id), backend_api_url, backend_stream_url, str(writer_port),
+                     broker_url, str(n_modules))
 
         backend_client = BackendClient(backend_api_url)
-        writer_client = CppWriterClient(stream_url=backend_stream_url,
-                                    writer_executable=writer_executable,
-                                    writer_port=writer_port,
-                                    log_folder=writer_log_folder+"/multiple/"+detector)
+        writer_client = SfCppWriterClient(stream_url=backend_stream_url,
+                                          writer_executable=writer_executable,
+                                          writer_port=writer_port,
+                                          log_folder=writer_log_folder + "/multiple/" + detector,
+                                          broker_url=broker_url,
+                                          n_modules=n_modules)
 
         detector_client = DetectorClient(id=detector_id)
- 
+
         enabled_detectors[detector] = DetectorPipeline(detector_client, backend_client, writer_client)
 
     bsread_client = DataBufferWriterClient(broker_url=broker_url)
