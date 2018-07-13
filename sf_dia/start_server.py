@@ -54,7 +54,8 @@ def start_integration_server(host, port, config_detectors,
                                           writer_port=writer_port,
                                           log_folder=writer_log_folder + "/multiple/" + detector,
                                           broker_url=broker_url,
-                                          n_modules=n_modules)
+                                          n_modules=n_modules,
+                                          detector_name=detector)
 
         detector_client = DetectorClient(id=detector_id)
 
