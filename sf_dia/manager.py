@@ -197,8 +197,11 @@ class IntegrationManager(object):
             _audit_logger.info("backend_client.set_config(backend_config)")
             modified_backend_config = copy(backend_config)
             if "pede_corrections_filename" in backend_config.keys():
-                modified_backend_config["pede_corrections_filename"] = backend_config["pede_corrections_filename"] + "." + detector + "_res.h5"
+                modified_backend_config["pede_corrections_filename"] = backend_config["pede_corrections_filename"] + "." + detector + ".res.h5"
                 _audit_logger.info("Pedestal file for detector %s will be %s", detector, modified_backend_config["pede_corrections_filename"])
+            if "gain_corrections_filename" in backend_config.keys():
+                modified_backend_config["gain_corrections_filename"] = backend_config["gain_corrections_filename"] + "/" + detector + "/gains.h5"
+                _audit_logger.info("Gain file for detector %s will be %s", detector, modified_backend_config["gain_corrections_filename"])
             backend_client.set_config(modified_backend_config)
             self._last_set_backend_config = backend_config
 
