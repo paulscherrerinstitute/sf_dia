@@ -7,6 +7,10 @@ class SfCppWriterClient(CppWriterClient):
         super(SfCppWriterClient, self).__init__(stream_url, writer_executable, writer_port, log_folder)
 
         self.broker_url = broker_url
+
+        if self.broker_url[-1] != "/":
+            broker_url += "/"
+
         self.n_modules = n_modules
 
     def get_execution_command(self):
