@@ -34,7 +34,7 @@ def start_integration_server(host, port, config_detectors,
         available_detectors = sf_config.available_detectors
     else:
         available_detectors = {}
-        available_detectors['JF1pM'] =    {'detector_id': 0, 'backend_api_url': backend_api_url, 'backend_stream_url': backend_stream_url, 'writer_port': writer_port}
+        available_detectors['JF'] =    {'detector_id': 0, 'backend_api_url': backend_api_url, 'backend_stream_url': backend_stream_url, 'writer_port': writer_port, 'n_modules': 1, 'n_bad_modules' : 0}
 
     for detector in available_detectors.keys():
         backend_api_url    = available_detectors[detector]['backend_api_url']
@@ -42,11 +42,12 @@ def start_integration_server(host, port, config_detectors,
         writer_port        = available_detectors[detector]['writer_port']
         detector_id        = available_detectors[detector]['detector_id']
         n_modules          = available_detectors[detector]['n_modules']
+        n_bad_modules      = available_detectors[detector]['n_bad_modules']
 
         _logger.info("Detector __ %s ___:\nDetector ID: %s \nBackend url: %s\nBackend stream: "
-                     "%s\nWriter port: %s\nBroker url: %s\nn_modules: %s\n",
+                     "%s\nWriter port: %s\nBroker url: %s\nn_modules: %s\nn_bad_modules: %s\n",
                      detector, str(detector_id), backend_api_url, backend_stream_url, str(writer_port),
-                     broker_url, str(n_modules))
+                     broker_url, str(n_modules), str(n_bad_modules))
 
         backend_client = BackendClient(backend_api_url)
         writer_client = SfCppWriterClient(stream_url=backend_stream_url,
@@ -55,6 +56,7 @@ def start_integration_server(host, port, config_detectors,
                                           log_folder=writer_log_folder + "/multiple/" + detector,
                                           broker_url=broker_url,
                                           n_modules=n_modules,
+                                          n_bad_modules=n_bad_modules,
                                           detector_name=detector)
 
         detector_client = DetectorClient(id=detector_id)
