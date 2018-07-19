@@ -224,6 +224,7 @@ class IntegrationManager(object):
         if output_file != "/dev/null":
             modified_bsread_config["output_file"] = output_file + ".BSREAD.h5"
             _audit_logger.info("Output file for bsread will be %s", modified_bsread_config["output_file"])
+
         self.bsread_client.set_parameters(modified_bsread_config)
         self._last_set_bsread_config = bsread_config
 
