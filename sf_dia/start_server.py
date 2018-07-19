@@ -83,7 +83,7 @@ def start_integration_server(host, port, config_detectors,
         _logger.info("   DETECTOR INTEGRATION API IS STARTED ")
         _logger.info("---------------------------------------")
 
-        bottle.run(app=app, host=host, port=port)
+        bottle.run(app=app, host=host, port=port, quiet=True)
     finally:
         pass
 
