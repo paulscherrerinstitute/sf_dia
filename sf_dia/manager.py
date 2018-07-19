@@ -105,32 +105,21 @@ class IntegrationManager(object):
         status = {} 
 
         for detector in self.enabled_detectors.keys():
-            _audit_logger.info("Detector : %s", detector)
             detector_client, backend_client, writer_client = self.enabled_detectors[detector].return_clients()
    
-            _audit_logger.info("writer_client.get_status()")
             writer_status = writer_client.get_status() \
                 if writer_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
 
-            _audit_logger.info("backend_client.get_status()")
             backend_status = backend_client.get_status() \
                 if backend_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
 
-            _audit_logger.info("detector_client.get_status()")
             detector_status = detector_client.get_status() \
                 if detector_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
 
-            _logger.debug("Detailed status requested (%s):\nWriter: %s\nBackend: %s\nDetector: %s",
-                      detector, writer_status, backend_status, detector_status)
-
             status[detector] = {"detector": detector_status, "backend": backend_status, "writer": writer_status}
 
-        _audit_logger.info("bsread_client.get_status()")
         bsread_status = self.bsread_client.get_status() \
             if self.bsread_client.is_client_enabled() else ClientDisableWrapper.STATUS_DISABLED
-
-        _logger.debug("Detailed status requested:\nbsread: %s",
-                      bsread_status)
 
         status["bsread"] = bsread_status
 
