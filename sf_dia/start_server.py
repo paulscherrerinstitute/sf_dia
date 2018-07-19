@@ -54,7 +54,7 @@ def start_integration_server(host, port, config_detectors,
         writer_client = SfCppWriterClient(stream_url=backend_stream_url,
                                           writer_executable=writer_executable,
                                           writer_port=writer_port,
-                                          log_folder=writer_log_folder + "/multiple/" + detector,
+                                          log_folder=writer_log_folder + detector,
                                           broker_url=broker_url,
                                           n_modules=n_modules,
                                           n_bad_modules=n_bad_modules,
@@ -77,6 +77,10 @@ def start_integration_server(host, port, config_detectors,
     register_rest_interface(app=app, integration_manager=integration_manager)
 
     try:
+        _logger.info("---------------------------------------")
+        _logger.info("   DETECTOR INTEGRATION API IS STARTED ")
+        _logger.info("---------------------------------------")
+
         bottle.run(app=app, host=host, port=port)
     finally:
         pass
