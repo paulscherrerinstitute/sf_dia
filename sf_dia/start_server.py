@@ -3,7 +3,9 @@ import logging
 
 import bottle
 from detector_integration_api import config
+from detector_integration_api.utils import turn_off_requests_logging
 from detector_integration_api.client.backend_rest_client import BackendClient
+
 from sf_dia.client.sf_cpp_writer_client import SfCppWriterClient
 from detector_integration_api.rest_api.rest_server import register_rest_interface
 
@@ -125,6 +127,8 @@ def main():
 
     # Setup the logging level.
     logging.basicConfig(level=arguments.log_level, format='[%(levelname)s] %(message)s')
+
+    turn_off_requests_logging()
 
     start_integration_server(host=arguments.interface,
                              port=arguments.port,
