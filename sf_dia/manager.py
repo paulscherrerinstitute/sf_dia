@@ -10,6 +10,8 @@ from sf_dia.client.detector_pipeline import DetectorPipeline
 
 import epics
 
+from threading import Thread
+
 _logger = getLogger(__name__)
 _audit_logger = getLogger("audit_trail")
 
@@ -273,9 +275,16 @@ class IntegrationManager(object):
 
     def reset(self):
 
+        from time import sleep,time
+        
+        time0 = time()
+
         _audit_logger.info("Resetting integration api.")
 
+        threads = []
+
         status = self.get_acquisition_status()
+        time1 = time()
         if status == IntegrationStatus.RUNNING or status == IntegrationStatus.DETECTOR_STOPPED:
             raise ValueError("Cannot reset acquisition in %s state. Please wait for backend to finish." % status)
 
@@ -284,12 +293,26 @@ class IntegrationManager(object):
         _logger.debug("Executing stop command: caput %s %d", self.timing_pv, self.timing_stop_code)
         epics.caput(self.timing_pv, self.timing_stop_code, wait=True, timeout=self.caput_timeout)
 
+        time2 = time()
         for detector in self.enabled_detectors.keys():
-            self.enabled_detectors[detector].reset()
+            thread = Thread(target=self.enabled_detectors[detector].reset)
+            thread.start()
+            threads.append(thread)
+        time3 = time()
 
-        _audit_logger.info("bsread_client.reset()")
-        self.bsread_client.reset()
+  
+        thread = Thread(target=self.bsread_client.reset)
+        thread.start()
+        threads.append(thread)
+ 
+        time4 = time()
 
+        for thread in threads:
+            thread.join()
+
+        time5 = time()
+
+        _logger.debug("----------------total reset timing %f, %f, %f, %f, %f, %f", time5-time0, time1-time0, time2-time1, time3-time2, time4-time3, time5-time4)
         return check_for_target_status(self.get_acquisition_status, IntegrationStatus.INITIALIZED)
 
     def kill(self):

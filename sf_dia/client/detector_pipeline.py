@@ -6,6 +6,7 @@ from detector_integration_api.client.detector_cli_client import DetectorClient
 
 _logger = getLogger(__name__)
 
+from time import time
 
 class DetectorPipeline(object):
 
@@ -28,9 +29,14 @@ class DetectorPipeline(object):
 
     def reset(self):
 
+        time1 = time()
         self.detector_client.stop()
+        time2 = time()
         self.backend_client.reset()
+        time3 = time()
         self.writer_client.reset()
+        time4 = time()
+        _logger.info("detector %f , backend %f , writer %f", time2-time1, time3-time2, time4-time3)
 
     def kill(self):
 
