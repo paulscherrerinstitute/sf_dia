@@ -88,7 +88,7 @@ class IntegrationManager(object):
 
     def get_acquisition_status(self):
         status = interpret_status(self.get_status_details())
-        _audit_logger.info("Get_acquisition_status : %s", status)
+        _audit_logger.info("Got_acquisition_status : %s", status)
         # There is no way of knowing if the detector is configured as the user desired.
         # We have a flag to check if the user config was passed on to the detector.
         if status == IntegrationStatus.CONFIGURED and self.last_config_successful is False:
@@ -100,7 +100,7 @@ class IntegrationManager(object):
         return str(self.get_acquisition_status())
 
     def get_status_details(self):
-        _audit_logger.info("Getting status details.")
+        #_audit_logger.info("Getting status details.")
 
         status = {} 
 

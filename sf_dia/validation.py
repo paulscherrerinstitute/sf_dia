@@ -132,7 +132,7 @@ def validate_configs_dependencies(writer_config, backend_config, detector_config
 
 def interpret_status(statuses):
 
-    _logger.debug("Interpreting statuses: %s", statuses)
+    #_logger.debug("Interpreting statuses: %s", statuses)
 
     bsread = statuses["bsread"]
     
@@ -183,10 +183,13 @@ def interpret_status(statuses):
                 and cmp(bsread, "stopped"):
             interpreted_status = IntegrationStatus.FINISHED
 
-        _logger.debug("Statuses interpreted as '%s' for detector %s .", interpreted_status, key)
+        #_logger.debug("Statuses interpreted as '%s' for detector %s .", interpreted_status, key)
 
         detector_status.add(interpreted_status)
 
     resulting_status = list(detector_status)[0] if len(detector_status) == 1 else IntegrationStatus.INCONSISTENT
+    
+    if resulting_status == IntegrationStatus.INCONSISTENT or resulting_status == IntegrationStatus.ERROR:
+        _logger.debug("Bad overall status : %s . Full status : '%s' (interpreted from %s)", resulting_status, detector_status, statuses)         
 
     return resulting_status
