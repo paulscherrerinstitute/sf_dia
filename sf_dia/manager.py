@@ -45,8 +45,7 @@ class IntegrationManager(object):
 
         self.last_config_successful = False
 
-
-    def start_acquisition(self, trigger_start=True):
+    def start_acquisition(self, parameters):
         _audit_logger.info("Starting acquisition.")
 
         status = self.get_acquisition_status()
@@ -56,15 +55,16 @@ class IntegrationManager(object):
         _audit_logger.info("bsread_client.start()")
         self.bsread_client.start()
 
-        _audit_logger.info("detector_pipeline .start()")
+        _audit_logger.info("detector_pipeline.start()")
         for detector in  self.enabled_detectors.keys():
             self.enabled_detectors[detector].start()
 
-        if trigger_start: 
+        if parameters.get("trigger_start", True):
             _logger.debug("Executing start command: caput %s %d", self.timing_pv, self.timing_start_code)
             epics.caput(self.timing_pv, self.timing_start_code, wait=True, timeout=self.caput_timeout)
         else:
-            _logger.debug("DIA prepared fully to collect data from detector, but trigger to start detector will come from outside")
+            _logger.debug("DIA prepared fully to collect data from detector, "
+                          "but trigger to start detector will come from outside")
 
         return check_for_target_status(self.get_acquisition_status,
                                        (IntegrationStatus.RUNNING,
