@@ -1,6 +1,6 @@
 package:
     name: sf_dia
-    version: 1.4.0
+    version: 1.5.0
 
 source:
     path: ..
@@ -15,7 +15,7 @@ requirements:
     run:
         - python
         - pyepics
-        - detector_integration_api >=1.4.0
+        - detector_integration_api >=1.6.0
 
 build:
   entry_points:
