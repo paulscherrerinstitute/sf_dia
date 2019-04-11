@@ -2,7 +2,7 @@ from logging import getLogger
 
 from detector_integration_api.client.backend_rest_client import BackendClient
 from detector_integration_api.client.cpp_writer_client   import CppWriterClient
-from detector_integration_api.client.detector_cli_client import DetectorClient
+from detector_integration_api.client.detector_client import DetectorClient
 
 _logger = getLogger(__name__)
 

@@ -11,7 +11,7 @@ from detector_integration_api.rest_api.rest_server import register_rest_interfac
 
 from sf_dia import manager
 from sf_dia.client.databuffer_writer_client import DataBufferWriterClient
-from detector_integration_api.client.detector_cli_client import DetectorClient
+from detector_integration_api.client.detector_client import DetectorClient
 
 from sf_dia.client.detector_pipeline import DetectorPipeline
 
