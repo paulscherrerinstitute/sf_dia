@@ -59,7 +59,7 @@ class IntegrationManager(object):
         for detector in  self.enabled_detectors.keys():
             self.enabled_detectors[detector].start()
 
-        if parameters.get("trigger_start", True):
+        if parameters is None or parameters.get("trigger_start", True):
             _logger.debug("Executing start command: caput %s %d", self.timing_pv, self.timing_start_code)
             epics.caput(self.timing_pv, self.timing_start_code, wait=True, timeout=self.caput_timeout)
         else:

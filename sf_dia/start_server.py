@@ -45,7 +45,6 @@ def start_integration_server(host, port, config_detectors,
         detector_id        = available_detectors[detector]['detector_id']
         n_modules          = available_detectors[detector]['n_modules']
         n_bad_modules      = available_detectors[detector]['n_bad_modules']
-        use_taskset        = available_detectors[detector].get('use_taskset', True)
 
         _logger.info("Detector __ %s ___:\nDetector ID: %s \nBackend url: %s\nBackend stream: "
                      "%s\nWriter port: %s\nBroker url: %s\nn_modules: %s\nn_bad_modules: %s\n",
@@ -62,7 +61,7 @@ def start_integration_server(host, port, config_detectors,
                                           n_bad_modules=n_bad_modules,
                                           detector_name=detector)
 
-        detector_client = DetectorClient(id=detector_id, use_taskset=use_taskset)
+        detector_client = DetectorClient(id=detector_id)
 
         enabled_detectors[detector] = DetectorPipeline(detector_client, backend_client, writer_client)
 

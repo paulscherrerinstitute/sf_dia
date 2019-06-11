@@ -12,7 +12,7 @@ available_detectors['JF03T01V01'] = {'detector_id': 2, 'backend_api_url': 'http:
 #                                     'writer_port': 10012, 'n_modules': 1, 'n_bad_modules' : 0}
 # stripsel detector
 #available_detectors['JF05T01V01'] = {'detector_id': 4, 'backend_api_url': 'http://localhost:8083', 'backend_stream_url': 'tcp://localhost:40003', 
-#                                     'writer_port': 10013, 'n_modules': 1, 'n_bad_modules' : 1, 'use_taskset' : False }
+#                                     'writer_port': 10013, 'n_modules': 1, 'n_bad_modules' : 1}
 
 # 16M detector
 available_detectors['JF07T32V01'] = {'detector_id': 5, 'backend_api_url': 'http://localhost:8087', 'backend_stream_url': 'tcp://localhost:40007', 
