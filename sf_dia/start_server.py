@@ -1,5 +1,7 @@
 import argparse
 import logging
+import os.path
+import json
 
 import bottle
 from detector_integration_api import config
@@ -17,7 +19,7 @@ from sf_dia.client.detector_pipeline import DetectorPipeline
 
 _logger = logging.getLogger(__name__)
 
-def start_integration_server(host, port, config_detectors,
+def start_integration_server(host, port, config_directory,
                              backend_api_url, backend_stream_url, writer_port,
                              broker_url, disable_bsread,
                              timing_pv, timing_start_code, timing_stop_code,
@@ -31,12 +33,13 @@ def start_integration_server(host, port, config_detectors,
 
     enabled_detectors = {}
 
-    if config_detectors != None:
-        sf_config = __import__(config_detectors)
-        available_detectors = sf_config.available_detectors
-    else:
-        available_detectors = {}
-        available_detectors['JF'] =    {'detector_id': 0, 'backend_api_url': backend_api_url, 'backend_stream_url': backend_stream_url, 'writer_port': writer_port, 'n_modules': 1, 'n_bad_modules' : 0}
+    available_detectors = {}
+    available_detectors['JF'] =    {'detector_id': 0, 'backend_api_url': backend_api_url, 'backend_stream_url': backend_stream_url, 'writer_port': writer_port, 'n_modules': 1, 'n_bad_modules' : 0}
+    if config_directory != None:
+        available_detectors_file = config_directory+"/available_detectors.json"
+        if os.path.isfile(available_detectors_file):
+            with open(available_detectors_file) as json_detector_file:
+                available_detectors = json.load(json_detector_file)
 
     for detector in available_detectors.keys():
         backend_api_url    = available_detectors[detector]['backend_api_url']
@@ -62,7 +65,9 @@ def start_integration_server(host, port, config_detectors,
                                           detector_name=detector)
 
         detector_client = DetectorClient(id=detector_id)
-
+#
+        detector_client.initialise(config_file=config_directory+"/"+detector+"/detector.config", n_modules=n_modules)
+#
         enabled_detectors[detector] = DetectorPipeline(detector_client, backend_client, writer_client)
 
     bsread_client = DataBufferWriterClient(broker_url=broker_url)
@@ -119,8 +124,8 @@ def main():
                         help="Timing event code to start the detector.")
     parser.add_argument("--timing_stop_code", default=255,
                         help="Timing event code to stop the detector.")
-    parser.add_argument("--config_detectors",default=None,
-                        help="Specify config .py file for the available detectors, see documentation for example.")
+    parser.add_argument("--config_directory",default=None,
+                        help="Specify config directory. Content of dirrectory will be searched for available_detectors.py config file and corresponding subdirectories (see documentation)")
 
     arguments = parser.parse_args()
 
@@ -131,7 +136,7 @@ def main():
 
     start_integration_server(host=arguments.interface,
                              port=arguments.port,
-                             config_detectors=arguments.config_detectors,
+                             config_directory=arguments.config_directory,
                              backend_api_url=arguments.backend_url,
                              backend_stream_url=arguments.backend_stream,
                              writer_port=arguments.writer_port,
