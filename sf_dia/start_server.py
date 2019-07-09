@@ -48,6 +48,10 @@ def start_integration_server(host, port, config_directory,
         detector_id        = available_detectors[detector]['detector_id']
         n_modules          = available_detectors[detector]['n_modules']
         n_bad_modules      = available_detectors[detector]['n_bad_modules']
+        if "disabled_modules" in available_detectors[detector]:
+            disabled_modules = available_detectors[detector]["disabled_modules"]
+        else:
+            disabled_modules = []
 
         _logger.info("Detector __ %s ___:\nDetector ID: %s \nBackend url: %s\nBackend stream: "
                      "%s\nWriter port: %s\nBroker url: %s\nn_modules: %s\nn_bad_modules: %s\n",
