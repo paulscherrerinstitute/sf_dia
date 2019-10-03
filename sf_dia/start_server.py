@@ -124,9 +124,9 @@ def main():
 
     parser.add_argument("--timing_pv", default="SAR-CVME-TIFALL4-EVG0:SoftEvt-EvtCode-SP",
                         help="PV for triggering soft events on the timing.")
-    parser.add_argument("--timing_start_code", default=254,
+    parser.add_argument("--timing_start_code", type=int, default=254,
                         help="Timing event code to start the detector.")
-    parser.add_argument("--timing_stop_code", default=255,
+    parser.add_argument("--timing_stop_code", type=int, default=255,
                         help="Timing event code to stop the detector.")
     parser.add_argument("--config_directory",default=None,
                         help="Specify config directory. Content of dirrectory will be searched for available_detectors.py config file and corresponding subdirectories (see documentation)")
