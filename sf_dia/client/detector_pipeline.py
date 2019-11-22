@@ -15,6 +15,10 @@ class DetectorPipeline(object):
         self.backend_client  = backend_client
         self.writer_client   = writer_client
 
+        self.detector_config = {}
+        self.backend_config  = {}
+        self.writer_config   = {}
+
     def start(self):
 
         self.backend_client.open()
@@ -47,4 +51,20 @@ class DetectorPipeline(object):
     def return_clients(self):
   
         return self.detector_client, self.backend_client, self.writer_client
+
+    def set_config(self, detector_config, backend_config, writer_config):
+       
+        self.detector_config.update(detector_config)
+        self.backend_config.update(backend_config)
+        self.writer_config.update(writer_config)
+
+    def clear_config(self):
+       
+        self.detector_config = {}
+        self.backend_config  = {}
+        self.writer_config   = {}
+
+    def get_config(self):
+
+        return self.detector_config, self.backend_config, self.writer_config
 

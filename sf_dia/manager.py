@@ -188,8 +188,15 @@ class IntegrationManager(object):
             _audit_logger.info("Detector : %s", detector)
             detector_client, backend_client, writer_client = self.enabled_detectors[detector].return_clients()
 
+            # add specific for the detector configuration, different from common
+
+            detector_config_add, backend_config_add, writer_config_add = self.enabled_detectors[detector].get_config()
+
             _audit_logger.info("backend_client.set_config(backend_config)")
             modified_backend_config = copy(backend_config)
+            if backend_config_add:
+                _audit_logger.info("backend configuration for %s will be enchanced with %s", detector, backend_config_add)
+                modified_backend_config.update(backend_config_add)
             if "pede_corrections_filename" in backend_config.keys() and backend_config["pede_corrections_filename"]:
                 modified_backend_config["pede_corrections_filename"] = backend_config["pede_corrections_filename"] + "." + detector + ".res.h5"
                 _audit_logger.info("Pedestal file for detector %s will be %s", detector, modified_backend_config["pede_corrections_filename"])
@@ -202,6 +209,9 @@ class IntegrationManager(object):
             _audit_logger.info("writer_client.set_parameters(writer_config)")
             output_file = writer_config["output_file"]
             modified_writer_config = copy(writer_config)
+            if writer_config_add:
+                _audit_logger.info("writer configuration for %s will be enchanced with %s", detector, writer_config_add)
+                writer_backend_config.update(writer_config_add)
             if output_file != "/dev/null":
                 modified_writer_config["output_file"] = output_file + "." + detector + ".h5"
                 _audit_logger.info("Output file for detector %s will be %s", detector, modified_writer_config["output_file"]) 
@@ -209,7 +219,11 @@ class IntegrationManager(object):
             self._last_set_writer_config = writer_config
 
             _audit_logger.info("detector_client.set_config(detector_config)")
-            detector_client.set_config(detector_config)
+            modified_detector_config = copy(detector_config)
+            if detector_config_add:
+                _audit_logger.info("detector configuration for %s will be enchanced with %s", detector, detector_config_add)
+                modified_detector_config.update(detector_config_add)
+            detector_client.set_config(modified_detector_config)
             self._last_set_detector_config = detector_config
 
         _audit_logger.info("bsread_client.set_parameters(bsread_config)")
@@ -275,6 +289,33 @@ class IntegrationManager(object):
                                 "writer":   self.enabled_detectors[detector].writer_client.is_client_enabled(),
                                 "detector": self.enabled_detectors[detector].detector_client.is_client_enabled()}
         return status
+
+    def set_client_configuration(self, configuration):
+        
+        for client in configuration:
+            if client not in self.enabled_detectors:
+                continue
+            writer_config   = configuration[client]["writer"]   if "writer"   in configuration[client] else {}
+            backend_config  = configuration[client]["backend"]  if "backend"  in configuration[client] else {}
+            detector_config = configuration[client]["detector"] if "detector" in configuration[client] else {}
+
+            self.enabled_detectors[client].set_config(detector_config, backend_config, writer_config)
+
+    def clear_client_configuration(self, client):
+
+        if client in self.enabled_detectors:
+            self.enabled_detectors[client].clear_config()
+        else:
+            _logger.info("request to get client information for not existing client %s, enabled one are %s", client, self.enabled_detectors.keys())
+
+    def get_client_configuration(self, client):
+   
+        config = {"detector" : {}, "backend": {}, "writer": {}}
+        if client in self.enabled_detectors:
+            config["detector"], config["backend"], config["writer"] = self.enabled_detectors[client].get_config()
+        else:
+            _logger.info("request to get client onformation for not existing client %s, enabled one are %s", client, self.enabled_detectors.keys()) 
+        return config
 
     def reset(self):
 
